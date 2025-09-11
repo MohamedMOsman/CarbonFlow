@@ -1,0 +1,15 @@
+{
+  "id": 4,
+  "name": "Calculator 1",
+  "type": "Calculator",
+  "data": {
+    "equation": ""
+  },
+  "overrides": {},
+  "position": {
+    "x": 200,
+    "y": 120,
+    "w": 180,
+    "h": 60
+  }
+}
