@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useModel } from '../context/ModelContext.jsx'
 
 function TreeToggle({ open }) {
@@ -12,13 +12,15 @@ export default function LeftSidebar() {
     // scenarios
     scenarios, activeScenarioId, setActiveScenarioId, addScenario, renameScenario, toggleScenario, deleteScenario,
     // systems
-    systems, activeSystemId, setActiveSystemId, addSystem, renameSystem, toggleSystem, deleteSystem,
+    systems, activeSystemId, setActiveSystemId, addSystem, renameSystem, toggleSystem, expandAllSystems, collapseAllSystems, deleteSystem,
     // components
     components, addComponent, addReference,
     // tool
     tool, setTool,
     // fs helpers
-    chooseOutputDir, syncAllToDisk, hasOutputDir, isFsSupported
+    chooseOutputDir, syncAllToDisk, hasOutputDir, isFsSupported,
+    // for dimensions derivation
+    getResolvedComponent
   } = useModel()
 
   const renderScenarioNode = (node, level=0) => {
@@ -76,24 +78,55 @@ export default function LeftSidebar() {
   const renderGlobalTree = (systemNode) => {
     return (
       <div key={`g-${systemNode.id}`} className="ml-2">
-        <div className="text-xs text-gray-600 font-medium">{systemNode.name}</div>
-        <ul className="ml-3 space-y-1">
-          {components.filter(c => c.systemId === systemNode.id && c.type !== 'Reference').map(c => (
-            <li key={c.id} className="flex items-center justify-between text-xs">
-              <span>{c.name} <span className="text-gray-400">({c.type})</span></span>
-              <button className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded" onClick={() => {
-                if (!activeSystemId) { alert('Select a target system first.'); return }
-                addReference(activeSystemId, c.id)
-              }}>Ref here</button>
-            </li>
-          ))}
-        </ul>
-        <div className="ml-3">
-          {systems.filter(s => s.parentId === systemNode.id).map(ch => renderGlobalTree(ch))}
+        <div className="flex items-center gap-1 group">
+          <button className="p-1" onClick={() => toggleSystem(systemNode.id)} title="Toggle">
+            <TreeToggle open={systemNode.isExpanded !== false} />
+          </button>
+          <div className="text-xs text-gray-600 font-medium">{systemNode.name}</div>
         </div>
+        {systemNode.isExpanded !== false && (
+          <>
+            <ul className="ml-3 space-y-1">
+              {components.filter(c => c.systemId === systemNode.id && c.type !== 'Reference').map(c => (
+                <li key={c.id} className="flex items-center justify-between text-xs">
+                  <span>{c.name} <span className="text-gray-400">({c.type})</span></span>
+                  <button className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded" onClick={() => {
+                    if (!activeSystemId) { alert('Select a target system first.'); return }
+                    addReference(activeSystemId, c.id)
+                  }}>Ref here</button>
+                </li>
+              ))}
+            </ul>
+            <div className="ml-3">
+              {systems.filter(s => s.parentId === systemNode.id).map(ch => renderGlobalTree(ch))}
+            </div>
+          </>
+        )}
       </div>
     )
   }
+
+  // --- Dimensions panel (aggregated from component dataset headers) ---
+  const dimensions = useMemo(() => {
+    try {
+      const byDim = new Map()
+      const datasetTypes = new Set(['Stock','Flow','Parameter','Dataset'])
+      const originals = components.filter(c => c.type !== 'Reference' && datasetTypes.has(c.type))
+      for (const c of originals) {
+        const resolved = getResolvedComponent(c, activeScenarioId)
+        const rows = resolved?.data?.data
+        if (!Array.isArray(rows) || !Array.isArray(rows[0])) continue
+        const headers = rows[0].map(v => String(v ?? '').trim()).filter(Boolean)
+        for (const h of headers) {
+          if (!byDim.has(h)) byDim.set(h, new Set())
+          byDim.get(h).add(c.id)
+        }
+      }
+      return Array.from(byDim.entries()).map(([name, set]) => ({ name, count: set.size })).sort((a,b) => a.name.localeCompare(b.name))
+    } catch {
+      return []
+    }
+  }, [components, getResolvedComponent, activeScenarioId])
 
   return (
     <aside className="w-80 bg-gray-50 p-3 border-r border-gray-200 shadow-inner flex flex-col gap-4 overflow-auto">
@@ -162,9 +195,41 @@ export default function LeftSidebar() {
       <div>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-sm font-semibold text-gray-600">Global Components</h2>
+          <div className="flex items-center gap-1">
+            <button
+              className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+              onClick={expandAllSystems}
+            >Expand All</button>
+            <button
+              className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+              onClick={collapseAllSystems}
+            >Collapse All</button>
+          </div>
         </div>
         <div>
           {systems.filter(s => s.parentId === null).map(s => renderGlobalTree(s))}
+        </div>
+      </div>
+
+      {/* Dimensions */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-sm font-semibold text-gray-600">Dimensions</h2>
+          <div className="text-[10px] text-gray-500">{dimensions.length} total</div>
+        </div>
+        <ul className="space-y-1 bg-white p-2 border rounded max-h-48 overflow-auto">
+          {dimensions.map(d => (
+            <li key={d.name} className="flex items-center justify-between text-xs">
+              <span className="font-medium text-gray-700">{d.name}</span>
+              <span className="text-gray-500 text-[10px] bg-gray-100 rounded px-1.5 py-0.5">{d.count} comps</span>
+            </li>
+          ))}
+          {!dimensions.length && (
+            <li className="text-xs text-gray-400">No dimensions detected yet</li>
+          )}
+        </ul>
+        <div className="text-[10px] text-gray-500 mt-1">
+          Based on header row of dataset-like components.
         </div>
       </div>
     </aside>

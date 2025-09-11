@@ -14,7 +14,7 @@ function download(filename, text) {
 }
 
 export default function RightSidebar({ onOpenPivot, onOpenCalc }) {
-  const { components, selectedId, renameComponent, removeComponent, saveComponentData, connections, getResolvedComponent, activeScenarioId } = useModel()
+  const { components, selectedId, selectedConnectionId, renameComponent, removeComponent, saveComponentData, connections, getResolvedComponent, activeScenarioId, disconnect } = useModel()
   const selected = useMemo(() => components.find(c => c.id === selectedId), [components, selectedId])
   const effective = useMemo(() => {
     if (!selected) return null
@@ -23,6 +23,9 @@ export default function RightSidebar({ onOpenPivot, onOpenCalc }) {
       : selected
   }, [selected, components])
   const fileRef = useRef(null)
+  const selectedConn = useMemo(() => connections.find(cn => cn.id === selectedConnectionId), [connections, selectedConnectionId])
+  const connFrom = useMemo(() => selectedConn ? components.find(c => c.id === selectedConn.fromId) : null, [selectedConn, components])
+  const connTo = useMemo(() => selectedConn ? components.find(c => c.id === selectedConn.toId) : null, [selectedConn, components])
 
   const effType = effective?.type || ''
   const isDataset = effType === 'Dataset' || ['Stock','Flow','Parameter'].includes(effType)
@@ -46,9 +49,7 @@ export default function RightSidebar({ onOpenPivot, onOpenCalc }) {
 
   return (
     <aside className="w-80 bg-gray-50 p-4 border-l border-gray-200 shadow-inner space-y-3 overflow-auto">
-      {!selected ? (
-        <div className="text-sm text-gray-500">Select a component to edit.</div>
-      ) : (
+      {selected ? (
         <div>
           <div className="text-xs text-gray-500 uppercase">Component</div>
           <input
@@ -61,9 +62,22 @@ export default function RightSidebar({ onOpenPivot, onOpenCalc }) {
           </div>
           <button className="mt-2 text-xs text-red-600 hover:underline" onClick={() => removeComponent(selected.id)}>Delete</button>
         </div>
+      ) : selectedConn ? (
+        <div>
+          <div className="text-xs text-gray-500 uppercase">Connection</div>
+          <div className="mt-1 text-sm">
+            <span className="font-medium text-gray-700">{connFrom?.name || 'Unknown'}</span>
+            <span className="text-gray-400"> → </span>
+            <span className="font-medium text-gray-700">{connTo?.name || 'Unknown'}</span>
+          </div>
+          <div className="text-xs text-gray-500">ID: {selectedConn.id}</div>
+          <button className="mt-2 text-xs text-red-600 hover:underline" onClick={() => disconnect(selectedConn.id)}>Delete Connection</button>
+        </div>
+      ) : (
+        <div className="text-sm text-gray-500">Select a component or connection.</div>
       )}
 
-      {isDataset && (
+      {selected && isDataset && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500 uppercase">Dataset</div>
           <div className="flex gap-2">
@@ -119,33 +133,35 @@ export default function RightSidebar({ onOpenPivot, onOpenCalc }) {
         </div>
       )}
 
-      {isCalculator && (
+      {selected && isCalculator && (
         <div className="space-y-2">
           <div className="text-xs text-gray-500 uppercase">Calculator</div>
           <button className="text-xs bg-blue-600 text-white px-2 py-1 rounded" onClick={() => onOpenCalc(effective)}>Edit Equation</button>
         </div>
       )}
 
-      {/* Connections overview */}
-      <div className="space-y-2">
-        <div className="text-xs text-gray-500 uppercase">Connections</div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div>
-            <div className="font-medium text-gray-600">Inputs</div>
-            <ul className="bg-gray-50 border rounded p-2 max-h-40 overflow-auto">
-              {inputs.map(i => <li key={i.id}>{i.name}</li>)}
-              {!inputs.length && <li className="text-gray-400">None</li>}
-            </ul>
-          </div>
-          <div>
-            <div className="font-medium text-gray-600">Outputs</div>
-            <ul className="bg-gray-50 border rounded p-2 max-h-40 overflow-auto">
-              {outputs.map(o => <li key={o.id}>{o.name}</li>)}
-              {!outputs.length && <li className="text-gray-400">None</li>}
-            </ul>
+      {/* Connections overview (for selected component) */}
+      {selected && (
+        <div className="space-y-2">
+          <div className="text-xs text-gray-500 uppercase">Connections</div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <div className="font-medium text-gray-600">Inputs</div>
+              <ul className="bg-gray-50 border rounded p-2 max-h-40 overflow-auto">
+                {inputs.map(i => <li key={i.id}>{i.name}</li>)}
+                {!inputs.length && <li className="text-gray-400">None</li>}
+              </ul>
+            </div>
+            <div>
+              <div className="font-medium text-gray-600">Outputs</div>
+              <ul className="bg-gray-50 border rounded p-2 max-h-40 overflow-auto">
+                {outputs.map(o => <li key={o.id}>{o.name}</li>)}
+                {!outputs.length && <li className="text-gray-400">None</li>}
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </aside>
   )
 }

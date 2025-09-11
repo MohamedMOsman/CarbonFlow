@@ -197,6 +197,14 @@ export function ModelProvider({ children }) {
     setSystems(ss => ss.map(s => s.id === id ? { ...s, isExpanded: !s.isExpanded } : s))
   }, [])
 
+  const expandAllSystems = useCallback(() => {
+    setSystems(ss => ss.map(s => ({ ...s, isExpanded: true })))
+  }, [])
+
+  const collapseAllSystems = useCallback(() => {
+    setSystems(ss => ss.map(s => ({ ...s, isExpanded: false })))
+  }, [])
+
   const deleteSystem = useCallback((id) => {
     const collect = (rootId, arr=[]) => {
       arr.push(rootId)
@@ -503,7 +511,7 @@ export function ModelProvider({ children }) {
     systems, components, connections, scenarios, activeScenarioId, selectedId, selectedIds, selectedConnectionId, activeSystemId,
     tool, setTool,
     setActiveScenarioId, setSelectedId, setSelectedIds, setSelectedConnectionId, setActiveSystemId,
-    addSystem, renameSystem, toggleSystem, deleteSystem,
+    addSystem, renameSystem, toggleSystem, expandAllSystems, collapseAllSystems, deleteSystem,
     addComponent, addReference,
     moveComponent, renameComponent, removeComponent, removeComponents,
     connect, disconnect,
