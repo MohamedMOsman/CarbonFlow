@@ -1,0 +1,120 @@
+                    onConfirm(value);
+                    const value = $('#input-modal-text').val().trim();
+                $('#input-modal-confirm').off('click').on('click', function() {
+                
+                $('#input-modal-text').focus();
+                inputModal.show();
+                $('#input-modal-text').attr('placeholder', placeholder).val('');
+                $('#input-modal-title').text(title);
+            function openInputModal(title, placeholder, onConfirm) {
+            // --- Modals and Data Editing ---
+
+            }
+                renderActiveSystem(); // Redraw to show override icon
+                }
+                    activeScenario.overrides[component.id][key] = value;
+                    }
+                        activeScenario.overrides[component.id] = {};
+                    if (!activeScenario.overrides[component.id]) {
+                } else {
+                    component[key] = value;
+                if (isBase) {
+
+                const isBase = !activeScenario.parentId; // Base scenario is the one with no parent
+                const activeScenario = scenarios.find(s => s.id === activeScenarioId);
+            function saveComponentData(component, key, value) {
+
+            }
+                return resolved;
+                });
+                    }
+                        if (override.equation) resolved.equation = override.equation;
+                        if (override.data) resolved.data = JSON.parse(JSON.stringify(override.data));
+                    if (override) {
+                    const override = scen.overrides[baseComponent.id];
+                ancestorPath.forEach(scen => {
+                let resolved = JSON.parse(JSON.stringify(baseComponent));
+                
+                }
+                    currentScenario = scenarios.find(s => s.id === currentScenario.parentId);
+                    ancestorPath.unshift(currentScenario);
+                while(currentScenario) {
+                let ancestorPath = [];
+                let currentScenario = scenarios.find(s => s.id === scenarioId);
+
+                if (!scenarioId) return JSON.parse(JSON.stringify(baseComponent));
+                if (!baseComponent) return null;
+             function getResolvedComponent(baseComponent, scenarioId) {
+            // --- Data Access & Modification ---
+            
+            }
+                }
+                    default: return { x: pos.left + w / 2, y: pos.top + h / 2};
+                    case 'bottom': return { x: pos.left + w / 2, y: pos.top + h };
+                    case 'top': return { x: pos.left + w / 2, y: pos.top };
+                    case 'right': return { x: pos.left + w, y: pos.top + h / 2 };
+                    case 'left': return { x: pos.left, y: pos.top + h / 2 };
+                switch(direction) {
+                const h = componentEl.outerHeight();
+                const w = componentEl.outerWidth();
+                const pos = componentEl.position();
+            function getConnectorPosition(componentEl, direction) {
+
+            }
+                }
+                    default: return { x: pos.x + w / 2, y: pos.y + h / 2};
+                    case 'bottom': return { x: pos.x + w / 2, y: pos.y + h };
+                    case 'top': return { x: pos.x + w / 2, y: pos.y };
+                    case 'right': return { x: pos.x + w, y: pos.y + h / 2 };
+                    case 'left': return { x: pos.x, y: pos.y + h / 2 };
+                switch(direction) {
+
+                const pos = component;
+                const h = element.length ? element.outerHeight() : 44;
+                const w = 120;
+            function getConnectorPositionFromData(component, direction, element) {
+            
+            }
+                });
+                    ctx.restore();
+                    ctx.fillStyle = '#4b5563'; ctx.fill();
+                    ctx.moveTo(0,0); ctx.lineTo(-10, -5); ctx.lineTo(-10, 5); ctx.closePath();
+                    ctx.beginPath();
+                    ctx.rotate(angle);
+                    ctx.translate(toPos.x, toPos.y);
+                    ctx.save();
+                    const angle = Math.atan2(toPos.y - cp2y, toPos.x - cp2x);
+
+                    ctx.stroke();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#4b5563';
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, toPos.x, toPos.y);
+                    
+                    }
+                        cp2x = toPos.x; cp2y = toPos.y - dy * 0.5;
+                        cp1x = fromPos.x; cp1y = fromPos.y + dy * 0.5;
+                    } else {
+                        cp2x = toPos.x - dx * 0.5; cp2y = toPos.y;
+                        cp1x = fromPos.x + dx * 0.5; cp1y = fromPos.y;
+                    if (conn.from.direction === 'left' || conn.from.direction === 'right') {
+
+                    let cp1x, cp1y, cp2x, cp2y;
+                    const dy = toPos.y - fromPos.y;
+                    const dx = toPos.x - fromPos.x;
+
+                    ctx.moveTo(fromPos.x, fromPos.y);
+                    ctx.beginPath();
+                        
+                    const toPos = getConnectorPositionFromData(toComp, conn.to.direction, toCompEl);
+                    const fromPos = getConnectorPositionFromData(fromComp, conn.from.direction, fromCompEl);
+                    
+                    const toCompEl = $(`#${conn.to.id}`);
+                    const fromCompEl = $(`#${conn.from.id}`);
+
+                    if (fromComp.systemId !== activeSystemId && toComp.systemId !== activeSystemId) return;
+
+                    if (!fromComp || !toComp) return;
+                    const toComp = findComponentById(conn.to.id);
+                    const fromComp = findComponentById(conn.from.id);
+                connections.forEach(conn => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);

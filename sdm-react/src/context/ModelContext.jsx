@@ -18,8 +18,11 @@ export function ModelProvider({ children }) {
   const [scenarios, setScenarios] = useState([{ id: 1, name: 'Base', parentId: null, isExpanded: true }])
   const [activeScenarioId, setActiveScenarioId] = useState(1)
   const [selectedId, setSelectedId] = useState(null)
+  const [selectedIds, setSelectedIds] = useState([]) // multi-select
   const [selectedConnectionId, setSelectedConnectionId] = useState(null)
   const [activeSystemId, setActiveSystemId] = useState(null)
+  // ui tool: 'select' | 'connect'
+  const [tool, setTool] = useState('select')
 
   // --- File System Access API integration ---
   const [outputDirHandle, setOutputDirHandle] = useState(null)
@@ -308,8 +311,23 @@ export function ModelProvider({ children }) {
     setConnections(cons => cons.filter(cn => cn.fromId !== id && cn.toId !== id))
     setSystems(ss => ss.map(s => ({ ...s, componentIds: s.componentIds.filter(cid => cid !== id) })))
     if (selectedId === id) setSelectedId(null)
+    setSelectedIds(sel => sel.filter(sid => sid !== id))
     if (selectedConnectionId) setSelectedConnectionId(null)
   }, [selectedId])
+
+  const removeComponents = useCallback((ids) => {
+    if (!Array.isArray(ids) || !ids.length) return
+    // Build full removal set including references pointing to any deleted original
+    const idSet = new Set(ids)
+    const refIds = components.filter(c => c.type === 'Reference' && idSet.has(c.originalId)).map(c => c.id)
+    const fullSet = new Set([...ids, ...refIds])
+    setComponents(cs => cs.filter(c => !fullSet.has(c.id)))
+    setConnections(cons => cons.filter(cn => !fullSet.has(cn.fromId) && !fullSet.has(cn.toId)))
+    setSystems(ss => ss.map(s => ({ ...s, componentIds: s.componentIds.filter(cid => !fullSet.has(cid)) })))
+    if (ids.includes(selectedId)) setSelectedId(null)
+    setSelectedIds([])
+    setSelectedConnectionId(null)
+  }, [selectedId, components])
 
   const connect = useCallback((fromId, toId) => {
     if (!fromId || !toId || fromId === toId) return
@@ -396,6 +414,7 @@ export function ModelProvider({ children }) {
     setScenarios([{ id: 1, name: 'Base', parentId: null, isExpanded: true }])
     setActiveScenarioId(1)
     setSelectedId(null)
+    setSelectedIds([])
     setSelectedConnectionId(null)
     setActiveSystemId(null)
     idCounter = 1
@@ -481,11 +500,12 @@ export function ModelProvider({ children }) {
   }, [systems.length])
 
   const value = useMemo(() => ({
-    systems, components, connections, scenarios, activeScenarioId, selectedId, selectedConnectionId, activeSystemId,
-    setActiveScenarioId, setSelectedId, setSelectedConnectionId, setActiveSystemId,
+    systems, components, connections, scenarios, activeScenarioId, selectedId, selectedIds, selectedConnectionId, activeSystemId,
+    tool, setTool,
+    setActiveScenarioId, setSelectedId, setSelectedIds, setSelectedConnectionId, setActiveSystemId,
     addSystem, renameSystem, toggleSystem, deleteSystem,
     addComponent, addReference,
-    moveComponent, renameComponent, removeComponent,
+    moveComponent, renameComponent, removeComponent, removeComponents,
     connect, disconnect,
     addScenario, renameScenario, toggleScenario, deleteScenario, setOverride, saveComponentData,
     getResolvedComponent, clearAll, modelForSimulation,
@@ -494,7 +514,8 @@ export function ModelProvider({ children }) {
     chooseOutputDir, syncAllToDisk,
     hasOutputDir: !!outputDirHandle, isFsSupported
   }), [systems, components, connections, scenarios, activeScenarioId, selectedId, selectedConnectionId, activeSystemId,
-      addSystem, renameSystem, toggleSystem, deleteSystem, addComponent, addReference, moveComponent, renameComponent, removeComponent, connect, disconnect, addScenario, renameScenario, toggleScenario, deleteScenario, setOverride, saveComponentData, getResolvedComponent, clearAll, modelForSimulation, exportModel, importModel, chooseOutputDir, syncAllToDisk, outputDirHandle, isFsSupported])
+      selectedIds, tool,
+      addSystem, renameSystem, toggleSystem, deleteSystem, addComponent, addReference, moveComponent, renameComponent, removeComponent, removeComponents, connect, disconnect, addScenario, renameScenario, toggleScenario, deleteScenario, setOverride, saveComponentData, getResolvedComponent, clearAll, modelForSimulation, exportModel, importModel, chooseOutputDir, syncAllToDisk, outputDirHandle, isFsSupported])
 
   return <ModelContext.Provider value={value}>{children}</ModelContext.Provider>
 }

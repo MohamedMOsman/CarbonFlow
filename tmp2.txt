@@ -1,0 +1,260 @@
+
+</html>
+</body>
+    </script>
+        });
+            
+            init();
+            // --- Initial Load ---
+
+            });
+                init();
+                scenarioIdCounter = 0;
+                systemIdCounter = 0;
+                componentIdCounter = 0;
+                scenarios = [];
+                systems = [];
+                connections = [];
+            $('#clear-canvas').on('click', function() {
+            
+            $('#close-simulation-modal, #close-simulation-modal-btn').on('click', () => simulationModal.hide());
+
+
+            });
+                simulationModal.show();
+                $('#simulation-data-json').text(JSON.stringify(modelData, null, 2));
+
+                };
+                    connections: resolvedConnections,
+                    components: resolvedComponents,
+                const modelData = {
+
+                })).filter(c => c.from && c.to);
+                    to: referenceMap.get(conn.to.id) || conn.to.id,
+                    from: referenceMap.get(conn.from.id) || conn.from.id,
+                const resolvedConnections = connections.map(conn => ({
+
+                allComponents.filter(c => c.type === 'Reference').forEach(ref => referenceMap.set(ref.id, ref.originalId));
+                const referenceMap = new Map();
+                
+                    });
+                        return {...resolved, fullName: getComponentFullName(c)};
+                        const resolved = getResolvedComponent(c, activeScenarioId);
+                    .map(c => {
+                    .filter(c => c.type !== 'Reference')
+                const resolvedComponents = allComponents
+                
+                const allComponents = systems.flatMap(s => s.components);
+            $('#run-simulation').on('click', function() {
+            // --- Simulation & Canvas Management ---
+
+            $('#close-calculator-modal-btn').on('click', closeCalculatorModal);
+            });
+                closeCalculatorModal();
+                }
+                    saveComponentData(selectedComponent, 'equation', newEquation);
+                    const newEquation = $('#calculator-equation').val();
+                if (selectedComponent && selectedComponent.type === 'Calculator') {
+            $('#save-equation').on('click', function() {
+
+            }
+                selectedComponent = null;
+                calculatorModal.hide();
+            function closeCalculatorModal() {
+            
+            $('#pivot-modal').on('click', function(e) { if(e.target === this) closePivotModal(); });
+            $('#close-modal, #close-modal-btn').on('click', closePivotModal);
+
+            }
+                selectedComponent = null;
+                setTimeout(() => pivotModal.hide(), 300);
+                pivotModal.find('.transform').addClass('scale-95 opacity-0');
+            function closePivotModal() {
+
+            });
+                $(this).val('');
+                }
+                    reader.readAsText(file);
+                    };
+                        }
+                            $("#pivot-table-container").pivotUI(newData, { rendererName: "Table" });
+                            renderEditableTable({data: newData});
+                            saveComponentData(selectedComponent, 'data', newData);
+                        if (newData.length > 0) {
+
+                        }));
+                            return cell;
+                            }
+                                return cell.slice(1, -1).replace(/""/g, '"');
+                            if (cell.startsWith('"') && cell.endsWith('"')) {
+                        const newData = rows.map(row => row.split(',').map(cell => {
+                        const rows = text.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+                        const text = e.target.result;
+                    reader.onload = function(e) {
+                    const reader = new FileReader();
+                if (file && selectedComponent) {
+                const file = event.target.files[0];
+            $('#csv-import-input').on('change', function(event) {
+
+            });
+                }
+                    }
+                        document.body.removeChild(link);
+                        link.click();
+                        document.body.appendChild(link);
+                        link.style.visibility = 'hidden';
+                        link.setAttribute("download", `${componentName}_data.csv`);
+                        link.setAttribute("href", url);
+                        const url = URL.createObjectURL(blob);
+                    if (link.download !== undefined) {
+                    const link = document.createElement("a");
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    
+                    const csvContent = componentData.map(toCsv).join('\n');
+
+                    }).join(',');
+                        return str;
+                        }
+                            return `"${str.replace(/"/g, '""')}"`;
+                        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                        const str = String(val);
+                    const toCsv = (row) => row.map(val => {
+
+                    const componentName = resolvedComponent.name;
+                    const componentData = resolvedComponent.data;
+                    const resolvedComponent = getResolvedComponent(selectedComponent, activeScenarioId);
+                if (selectedComponent) {
+            $('#export-csv').on('click', function() {
+
+            });
+                }
+                    $('#csv-import-input').click();
+                if (selectedComponent) {
+            $('#import-csv').on('click', function() {
+
+            });
+                }
+                    });
+                        }
+                            $("#pivot-table-container").pivotUI(resolvedData, { rendererName: "Table" });
+                            renderEditableTable({data: resolvedData});
+                            saveComponentData(selectedComponent, 'data', resolvedData);
+                            }
+                                resolvedData[i].push('0');
+                            for (let i = 1; i < resolvedData.length; i++) {
+                            resolvedData[0].push(newName);
+                            let resolvedData = JSON.parse(JSON.stringify(getResolvedComponent(selectedComponent, activeScenarioId).data));
+                        if (newName) {
+                    openInputModal('Add New Dimension', 'Dimension Name', newName => {
+                 if (selectedComponent) {
+            $('#add-dimension').on('click', function() {
+
+            });
+                }
+                    $("#pivot-table-container").pivotUI(resolvedData, { rendererName: "Table" });
+                    renderEditableTable({data: resolvedData});
+                    saveComponentData(selectedComponent, 'data', resolvedData);
+                    resolvedData.push(newRow);
+                    const newRow = Array(resolvedData[0].length).fill('0');
+                    let resolvedData = JSON.parse(JSON.stringify(getResolvedComponent(selectedComponent, activeScenarioId).data));
+                 if (selectedComponent) {
+            $('#add-row').on('click', function() {
+            
+            });
+                $("#pivot-table-container").pivotUI(resolvedData, { rendererName: "Table" });
+                saveComponentData(selectedComponent, 'data', resolvedData);
+
+                resolvedData[rowIndex][colIndex] = el.text();
+                let resolvedData = JSON.parse(JSON.stringify(getResolvedComponent(selectedComponent, activeScenarioId).data));
+                
+                const colIndex = parseInt(el.data('col'));
+                const rowIndex = parseInt(el.data('row'));
+                const el = $(this);
+            $('#raw-data-container').on('blur', 'td[contenteditable="true"]', function() {
+
+            }
+                $('#raw-data-container').html(tableHtml);
+                tableHtml += '</tbody></table>';
+                });
+                    tableHtml += '</tr>';
+                    });
+                        tableHtml += `<td contenteditable="true" data-row="${rowIndex + 1}" data-col="${colIndex}">${cell}</td>`;
+                    row.forEach((cell, colIndex) => {
+                    tableHtml += '<tr>';
+                component.data.slice(1).forEach((row, rowIndex) => {
+                tableHtml += '</tr></thead><tbody>';
+                component.data[0].forEach(header => { tableHtml += `<th>${header}</th>`; });
+                let tableHtml = '<table class="w-full text-sm text-left editable-table"><thead><tr>';
+            function renderEditableTable(component) {
+
+            }
+                calculatorModal.show();
+                updateConnectionLists(component, '#calculator-inputs-list', '#calculator-outputs-list');
+                $('#calculator-equation').val(component.equation);
+                $('#calculator-modal-title').text(`Edit Equation: ${component.name} (${activeScenario.name})`);
+                const activeScenario = scenarios.find(s => s.id === activeScenarioId);
+            function openCalculatorModal(component) {
+
+            }
+                pivotModal.show();
+                pivotModal.find('.transform').removeClass('scale-95 opacity-0');
+                updateConnectionLists(component, '#pivot-inputs-list', '#pivot-outputs-list');
+                renderEditableTable(component);
+                $("#pivot-table-container").pivotUI(component.data, { rendererName: "Table" });
+                $('#modal-title').text(`Edit: ${component.name} (${activeScenario.name})`);
+                const activeScenario = scenarios.find(s => s.id === activeScenarioId);
+            function openPivotModal(component) {
+
+            }
+                }
+                    outputList.append('<li class="text-gray-400">None</li>');
+                } else {
+                    [...new Set(outputs)].forEach(name => outputList.append(`<li class="truncate" title="${name}">${name}</li>`));
+                if (outputs.length > 0) {
+                outputList.empty();
+                const outputList = $(outputListSelector);
+
+                }
+                    inputList.append('<li class="text-gray-400">None</li>');
+                } else {
+                    [...new Set(inputs)].forEach(name => inputList.append(`<li class="truncate" title="${name}">${name}</li>`));
+                if (inputs.length > 0) {
+                inputList.empty();
+                const inputList = $(inputListSelector);
+
+                    .map(c => getFullNameForConnection(c.to.id));
+                    .filter(c => (findComponentById(c.from.id)?.originalId || c.from.id) === component.id)
+                const outputs = connections
+                
+                    .map(c => getFullNameForConnection(c.from.id));
+                    .filter(c => (findComponentById(c.to.id)?.originalId || c.to.id) === component.id)
+                const inputs = connections
+
+                };
+                    return getComponentFullName(originalComp);
+                    }
+                         return originalComp.name;
+                    if (originalComp.systemId === component.systemId) {
+                    
+                    }
+                        if (!originalComp) return "Broken Reference";
+                        originalComp = findComponentById(comp.originalId);
+                    if (comp.type === 'Reference') {
+                    let originalComp = comp;
+
+                    if (!comp) return "Unknown";
+                    let comp = findComponentById(componentId);
+                 const getFullNameForConnection = (componentId) => {
+            function updateConnectionLists(component, inputListSelector, outputListSelector) {
+
+            $('#confirm-modal-cancel').on('click', () => confirmModal.hide());
+            }
+                });
+                    confirmModal.hide();
+                    onConfirm();
+                $('#confirm-modal-confirm').off('click').on('click', function() {
+                
+                confirmModal.show();
+                $('#confirm-modal-body').text(body);
+                $('#confirm-modal-title').text(title);
+            function openConfirmModal(title, body, onConfirm) {

@@ -6,7 +6,7 @@ import RightSidebar from './components/RightSidebar.jsx'
 import { CalculatorModal, PivotModal, SimulationModal } from './components/Modals.jsx'
 
 function AppShell() {
-  const { clearAll, exportModel, importModel, selectedId, removeComponent, selectedConnectionId, disconnect } = useModel()
+  const { clearAll, exportModel, importModel, selectedId, selectedIds, removeComponent, removeComponents, selectedConnectionId, disconnect } = useModel()
   const [simOpen, setSimOpen] = useState(false)
   const [pivotOpen, setPivotOpen] = useState(false)
   const [calcOpen, setCalcOpen] = useState(false)
@@ -19,6 +19,8 @@ function AppShell() {
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selectedConnectionId) {
           disconnect(selectedConnectionId)
+        } else if (Array.isArray(selectedIds) && selectedIds.length > 1) {
+          removeComponents(selectedIds)
         } else if (selectedId) {
           removeComponent(selectedId)
         }
@@ -26,7 +28,7 @@ function AppShell() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectedId, selectedConnectionId, disconnect, removeComponent])
+  }, [selectedId, selectedIds, selectedConnectionId, disconnect, removeComponent, removeComponents])
 
   return (
     <div className="h-screen flex flex-col">
@@ -52,7 +54,8 @@ function AppShell() {
               reader.readAsText(file)
               e.target.value = ''
             }} />
-            <button className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1.5 rounded" onClick={clearAll}>Clear</button>
+            <button className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1.5 rounded" title="Delete selected components" onClick={() => { if (selectedIds?.length) removeComponents(selectedIds) }}>Clear</button>
+            <button className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1.5 rounded" title="Clear all components, systems, scenarios" onClick={clearAll}>Clear All</button>
             <button className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1.5 rounded" onClick={() => setSimOpen(true)}>Run Simulation</button>
           </div>
         </div>

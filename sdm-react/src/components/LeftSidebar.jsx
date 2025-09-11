@@ -15,6 +15,8 @@ export default function LeftSidebar() {
     systems, activeSystemId, setActiveSystemId, addSystem, renameSystem, toggleSystem, deleteSystem,
     // components
     components, addComponent, addReference,
+    // tool
+    tool, setTool,
     // fs helpers
     chooseOutputDir, syncAllToDisk, hasOutputDir, isFsSupported
   } = useModel()
@@ -138,8 +140,16 @@ export default function LeftSidebar() {
           <div className="mt-2 p-2 bg-white border rounded">
             <div className="text-xs font-medium text-gray-600 mb-1">New Components</div>
             <div className="grid grid-cols-2 gap-1">
-              {['Stock','Flow','Parameter','Dataset','Calculator'].map(type => (
-                <button key={type} className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded" onClick={() => addComponent(activeSystemId, type)}>
+              {['Stock','Flow','Parameter','Dataset','Calculator','Connector'].map(type => (
+                <button
+                  key={type}
+                  className={`text-xs px-2 py-1 rounded ${type==='Connector' ? (tool==='connect' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200') : 'bg-gray-100 hover:bg-gray-200'}`}
+                  onClick={() => {
+                    if (type === 'Connector') { setTool(tool === 'connect' ? 'select' : 'connect') }
+                    else { addComponent(activeSystemId, type) }
+                  }}
+                  title={type==='Connector' ? 'Connect mode: click source then target' : ''}
+                >
                   {type}
                 </button>
               ))}
