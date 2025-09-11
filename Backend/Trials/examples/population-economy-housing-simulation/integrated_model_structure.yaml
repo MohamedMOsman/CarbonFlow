@@ -1,0 +1,470 @@
+# Integrated Population-Economy-Housing Model Structure
+# This file combines all three modules: population-dynamics, economic-indicators, and housing-market
+# Scenario-specific parameters are defined in separate integrated_scenario_parameters.yaml file
+
+model:
+  name: "Integrated Population-Economy-Housing Simulation"
+  description: "Comprehensive multi-module system dynamics simulation modeling interconnected impacts of population dynamics, economic factors, and housing market changes"
+  time_horizon: 50
+  dt: 0.25
+  time_units: "year"
+
+# Combined dimension specifications from all modules
+dimensions:
+  age_group:
+    size: 5
+    labels: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    description: "Age cohorts for demographic and economic analysis"
+    coordinates: [7, 22, 37, 52, 70]  # Representative ages
+  
+  gender:
+    size: 2
+    labels: ["male", "female"]
+    description: "Gender categories"
+    coordinates: [0, 1]  # Binary encoding
+  
+  income_bracket:
+    size: 3
+    labels: ["low", "medium", "high"]
+    description: "Income level categories"
+    coordinates: [30000, 60000, 120000]  # Representative income levels (USD/year)
+  
+  housing_type:
+    size: 2
+    labels: ["single_family", "apartment"]
+    description: "Housing type categories"
+    coordinates: [1, 2]  # Numeric encoding
+  
+  price_bracket:
+    size: 2
+    labels: ["affordable", "market_rate"]
+    description: "Housing price categories"
+    coordinates: [1, 2]  # Numeric encoding
+
+# Combined function definitions from all modules
+functions:
+  # Population dynamics functions
+  immigration_flow_calculator:
+    expression: "base_immigration_rate * immigration_multiplier * Economic_Attraction_Factor"
+    dependencies: ["Economic_Attraction_Factor"]
+    output_dimensions: ["age_group", "gender", "income_bracket"]
+    description: "Calculate immigration flows across demographic dimensions"
+
+  economic_attraction_calculator:
+    expression: "1.0 + economic_growth_rate * time"
+    dependencies: []
+    output_dimensions: []
+    description: "Economic attraction factor for immigration"
+  
+  emigration_flow_calculator:
+    expression: "base_emigration_rate * emigration_multiplier * Total_Population[:, :, np.newaxis]"
+    dependencies: ["Total_Population"]
+    output_dimensions: ["age_group", "gender", "income_bracket"]
+    description: "Calculate emigration flows based on population"
+
+  birth_flow_calculator:
+    expression: "fertility_rate * fertility_multiplier * Total_Population[:, :, np.newaxis]"
+    dependencies: ["Total_Population"]
+    output_dimensions: ["age_group", "gender", "income_bracket"]
+    description: "Calculate births by age, gender, and income"
+
+  death_flow_calculator:
+    expression: "mortality_rate * mortality_multiplier * Total_Population[:, :, np.newaxis]"
+    dependencies: ["Total_Population"]
+    output_dimensions: ["age_group", "gender", "income_bracket"]
+    description: "Calculate deaths across all demographic dimensions"
+  
+  # Economic indicators functions
+  employment_flow_calculator:
+    expression: "employment_rate * labor_participation_rate * Total_Population"
+    dependencies: ["Total_Population"]
+    output_dimensions: ["age_group", "gender"]
+    description: "Calculate employment changes based on population and participation rates"
+
+  income_flow_calculator:
+    expression: "income_growth_rate * base_income * np.sum(Employed_Population, axis=1)[:, np.newaxis]"
+    dependencies: ["Employed_Population"]
+    output_dimensions: ["age_group", "income_bracket"]
+    description: "Calculate income changes based on employment and growth rates"
+  
+  # Housing market functions
+  construction_flow_calculator:
+    expression: "construction_rate * Housing_Demand_Pressure * Economic_Conditions"
+    dependencies: ["Housing_Demand_Pressure", "Economic_Conditions"]
+    output_dimensions: ["housing_type", "price_bracket"]
+    description: "Calculate new housing construction based on demand and economic conditions"
+
+  price_adjustment_calculator:
+    expression: "price_elasticity * (Housing_Demand_Calc - Housing_Supply) / np.maximum(Housing_Supply, 1.0)"
+    dependencies: ["Housing_Demand_Calc", "Housing_Supply"]
+    output_dimensions: ["housing_type", "price_bracket"]
+    description: "Calculate housing price adjustments based on supply-demand balance with division by zero protection"
+
+# Combined model elements from all modules
+elements:
+  stocks:
+    # Population dynamics stocks
+    - name: "Base_Population"
+      initial_value: "$base_population_distribution"
+      units: "persons"
+      spatial_dims: ["age_group", "gender"]
+      min_value: 0
+      description: "Initial population distribution by age and gender"
+    
+    - name: "Total_Population"
+      initial_value: "$total_population_distribution"
+      units: "persons"
+      spatial_dims: ["age_group", "gender"]
+      min_value: 0
+      description: "Population by age and gender"
+
+    # Economic indicators stocks
+    - name: "Employed_Population"
+      initial_value: "$employed_population_distribution"
+      units: "persons"
+      spatial_dims: ["age_group", "gender"]
+      min_value: 0
+      description: "Working population by age and gender"
+
+    - name: "Average_Income"
+      initial_value: "$average_income_distribution"
+      units: "USD/year"
+      spatial_dims: ["age_group", "income_bracket"]
+      min_value: 0
+      description: "Income levels by age and income bracket"
+    
+    # Housing market stocks
+    - name: "Housing_Inventory"
+      initial_value: "$housing_inventory_distribution"
+      units: "units"
+      spatial_dims: ["housing_type", "price_bracket"]
+      min_value: 0
+      description: "Existing housing stock by type and price bracket"
+    
+    - name: "Housing_Supply"
+      initial_value: "$housing_supply_distribution"
+      units: "units"
+      spatial_dims: ["housing_type", "price_bracket"]
+      min_value: 0
+      description: "Housing availability by type and price bracket"
+
+    - name: "Average_Housing_Price"
+      initial_value: "$average_housing_price_distribution"
+      units: "USD"
+      spatial_dims: ["housing_type", "price_bracket"]
+      min_value: 0
+      description: "Market prices by housing type and price bracket"
+  
+  flows:
+    # Population dynamics flows
+    - name: "Immigration_Flow"
+      rate: "immigration_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Immigration inflows by demographics"
+      parameters:
+        base_immigration_rate: "$base_immigration_rate"
+        immigration_multiplier: "$immigration_multiplier"
+    
+    - name: "Emigration_Flow"
+      rate: "emigration_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Emigration outflows by demographics"
+      parameters:
+        base_emigration_rate: "$base_emigration_rate"
+        emigration_multiplier: "$emigration_multiplier"
+    
+    - name: "Birth_Flow"
+      rate: "birth_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "New births based on fertility rates"
+      parameters:
+        fertility_rate: "$fertility_rate"
+        fertility_multiplier: "$fertility_multiplier"
+    
+    - name: "Death_Flow"
+      rate: "death_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Deaths based on mortality rates"
+      parameters:
+        mortality_rate: "$mortality_rate"
+        mortality_multiplier: "$mortality_multiplier"
+    
+    # Economic indicators flows
+    - name: "Employment_Flow"
+      rate: "employment_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender"]
+      description: "Labor force participation changes"
+      parameters:
+        employment_rate: "$employment_rate"
+        labor_participation_rate: "$labor_participation_rate"
+    
+    - name: "Income_Flow"
+      rate: "income_flow_calculator"
+      units: "USD/year/year"
+      spatial_dims: ["age_group", "income_bracket"]
+      description: "Average income changes"
+      parameters:
+        income_growth_rate: "$income_growth_rate"
+        base_income: "$base_income"
+    
+    # Housing market flows
+    - name: "Construction_Flow"
+      rate: "construction_flow_calculator"
+      units: "units/year"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "New housing development"
+      parameters:
+        construction_rate: "$construction_rate"
+    
+    - name: "Price_Adjustment_Flow"
+      rate: "price_adjustment_calculator"
+      units: "USD/year"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Market price changes"
+      parameters:
+        price_elasticity: "$price_elasticity"
+
+  calculators:
+    # Population dynamics calculators
+    - name: "Net_Migration_Calc"
+      expression: "Immigration_Flow - Emigration_Flow"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Net migration = immigration - emigration"
+      dependencies: ["Immigration_Flow", "Emigration_Flow"]
+
+    - name: "Natural_Growth_Calc"
+      expression: "Birth_Flow - Death_Flow"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Natural population growth = births - deaths"
+      dependencies: ["Birth_Flow", "Death_Flow"]
+
+    - name: "Population_Change_Calc"
+      expression: "np.sum(Net_Migration_Calc, axis=-1) + np.sum(Natural_Growth_Calc, axis=-1)"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender"]
+      description: "Total population change combining migration and natural growth"
+      dependencies: ["Net_Migration_Calc", "Natural_Growth_Calc"]
+
+    # Economic indicators calculators
+    - name: "Employment_Rate_Calc"
+      expression: "Employed_Population / Total_Population"
+      units: "dimensionless"
+      spatial_dims: ["age_group", "gender"]
+      description: "Employment rate = employed population / total population"
+      dependencies: ["Employed_Population", "Total_Population"]
+
+    - name: "Total_Income_Calc"
+      expression: "np.sum(Employed_Population, axis=1)[:, np.newaxis] * Average_Income"
+      units: "USD/year"
+      spatial_dims: ["age_group", "income_bracket"]
+      description: "Total income by age group and income bracket"
+      dependencies: ["Employed_Population", "Average_Income"]
+
+    - name: "Economic_Output_Calc"
+      expression: "np.sum(Total_Income_Calc)"
+      units: "USD/year"
+      description: "Total economic output across all demographics"
+      dependencies: ["Total_Income_Calc"]
+
+    # Housing market calculators
+    - name: "Housing_Demand_Calc"
+      expression: "demand_per_person * np.sum(Total_Population) * income_demand_multiplier"
+      units: "units"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Housing demand based on population and income"
+      dependencies: ["Total_Population"]
+      parameters:
+        demand_per_person: "$demand_per_person"
+        income_demand_multiplier: "$income_demand_multiplier"
+
+    - name: "Affordability_Index_Calc"
+      expression: "np.mean(Average_Income) / Average_Housing_Price"
+      units: "dimensionless"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Affordability index = average income / housing price"
+      dependencies: ["Average_Income", "Average_Housing_Price"]
+
+    - name: "Housing_Supply_Demand_Ratio"
+      expression: "Housing_Supply / Housing_Demand_Calc"
+      units: "dimensionless"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Supply-demand balance indicator"
+      dependencies: ["Housing_Supply", "Housing_Demand_Calc"]
+
+  auxiliaries:
+    # Population dynamics auxiliaries
+    - name: "Economic_Attraction_Factor"
+      calculation: "economic_attraction_calculator"
+      units: "dimensionless"
+      description: "Economic attraction factor for immigration"
+      parameters:
+        economic_growth_rate: "$economic_growth_rate"
+
+    - name: "Population_Growth_Rate"
+      calculation: "Population_Change_Calc / Total_Population"
+      units: "1/year"
+      spatial_dims: ["age_group", "gender"]
+      description: "Population growth rate by demographics"
+      parameters: {}
+
+    # Economic indicators auxiliaries
+    - name: "Labor_Force_Participation"
+      calculation: "base_participation_rate * (1 + participation_trend * time)"
+      units: "dimensionless"
+      spatial_dims: ["age_group", "gender"]
+      description: "Labor force participation rate over time"
+      parameters:
+        base_participation_rate: "$base_participation_rate"
+        participation_trend: "$participation_trend"
+
+    - name: "Unemployment_Rate"
+      calculation: "1.0 - Employment_Rate_Calc"
+      units: "dimensionless"
+      spatial_dims: ["age_group", "gender"]
+      description: "Unemployment rate by demographics"
+      parameters: {}
+
+    # Housing market auxiliaries
+    - name: "Housing_Demand_Pressure"
+      calculation: "1.0 + demand_pressure_sensitivity * (Housing_Demand_Calc - Housing_Supply) / Housing_Supply"
+      units: "dimensionless"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Demand pressure factor for construction"
+      parameters:
+        demand_pressure_sensitivity: "$demand_pressure_sensitivity"
+
+    - name: "Economic_Conditions"
+      calculation: "base_economic_factor * (1.0 + economic_growth_impact * time)"
+      units: "dimensionless"
+      description: "Economic conditions affecting construction"
+      parameters:
+        base_economic_factor: "$base_economic_factor"
+        economic_growth_impact: "$economic_growth_impact"
+
+# Integrated connections between all model elements
+connections:
+  # Population dynamics stock connections
+  - from: "Population_Change_Calc"
+    to: "Total_Population"
+    type: "inflow"
+
+  # Economic indicators stock connections
+  - from: "Employment_Flow"
+    to: "Employed_Population"
+    type: "inflow"
+
+  - from: "Income_Flow"
+    to: "Average_Income"
+    type: "inflow"
+
+  # Housing market stock connections
+  - from: "Construction_Flow"
+    to: "Housing_Supply"
+    type: "inflow"
+
+  - from: "Price_Adjustment_Flow"
+    to: "Average_Housing_Price"
+    type: "inflow"
+
+  # Cross-module dependencies: Population -> Economic
+  - from: "Total_Population"
+    to: "Employment_Flow"
+    type: "dependency"
+
+  - from: "Total_Population"
+    to: "Employment_Rate_Calc"
+    type: "dependency"
+
+  - from: "Employed_Population"
+    to: "Income_Flow"
+    type: "dependency"
+
+  # Cross-module dependencies: Population -> Housing
+  - from: "Total_Population"
+    to: "Housing_Demand_Calc"
+    type: "dependency"
+
+  # Cross-module dependencies: Economic -> Housing
+  - from: "Average_Income"
+    to: "Affordability_Index_Calc"
+    type: "dependency"
+
+  - from: "Economic_Output_Calc"
+    to: "Economic_Conditions"
+    type: "dependency"
+
+  # Internal module dependencies
+  - from: "Total_Population"
+    to: "Population_Growth_Rate"
+    type: "dependency"
+
+  - from: "Total_Population"
+    to: "Emigration_Flow"
+    type: "dependency"
+
+  - from: "Total_Population"
+    to: "Birth_Flow"
+    type: "dependency"
+
+  - from: "Total_Population"
+    to: "Death_Flow"
+    type: "dependency"
+
+  - from: "Economic_Attraction_Factor"
+    to: "Immigration_Flow"
+    type: "dependency"
+
+  - from: "Housing_Demand_Pressure"
+    to: "Construction_Flow"
+    type: "dependency"
+
+  - from: "Economic_Conditions"
+    to: "Construction_Flow"
+    type: "dependency"
+
+# Integrated validation rules for model consistency
+validation:
+  dimension_consistency:
+    - check: "all_arrays_match_dimensions"
+      message: "All arrays must match their defined dimensions"
+
+    - check: "cross_module_dimension_compatibility"
+      message: "Cross-module dependencies must have compatible dimensions"
+
+  parameter_bounds:
+    - parameter: "fertility_rate"
+      min: 0
+      max: 0.1
+      message: "Fertility rate must be between 0 and 0.1 per year"
+
+    - parameter: "mortality_rate"
+      min: 0
+      max: 0.05
+      message: "Mortality rate must be between 0 and 0.05 per year"
+
+    - parameter: "employment_rate"
+      min: 0
+      max: 1
+      message: "Employment rate must be between 0 and 1"
+
+    - parameter: "construction_rate"
+      min: 0
+      max: 0.2
+      message: "Construction rate must be between 0 and 20% per year"
+
+  cross_module_constraints:
+    - check: "employment_population_consistency"
+      message: "Employed population cannot exceed total population"
+
+    - check: "housing_demand_supply_balance"
+      message: "Housing supply and demand must be economically reasonable"
+
+    - check: "income_employment_consistency"
+      message: "Income levels must be consistent with employment patterns"

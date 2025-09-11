@@ -1,0 +1,60 @@
+# Housing Market Module Scenario Parameters
+# This file contains parameter values for the housing market module
+# Used with housing-market/model_structure.yaml
+
+scenario:
+  name: "Housing Market Baseline Scenario"
+  description: "Baseline scenario for housing market with moderate supply and demand conditions"
+  version: "1.0"
+  created_date: "2024-01-15"
+  model_file: "model_structure.yaml"
+
+# Parameter values for housing market
+constants:
+  # Housing inventory distribution [housing_type, price_bracket] - initial values
+  housing_inventory_distribution:
+    # Housing types: ["single_family", "apartment"]
+    # Price brackets: ["affordable", "market_rate"]
+    - [15000, 25000]  # single_family: [affordable, market_rate]
+    - [8000, 18000]   # apartment: [affordable, market_rate]
+
+  # Housing supply distribution [housing_type, price_bracket, year] - initial values
+  housing_supply_distribution:
+    # Same as housing_inventory_distribution for initial year
+    - [15000, 25000]  # single_family: [affordable, market_rate]
+    - [8000, 18000]   # apartment: [affordable, market_rate]
+
+  # Average housing price distribution [housing_type, price_bracket, year] - initial values
+  average_housing_price_distribution:
+    # Housing types: ["single_family", "apartment"]
+    # Price brackets: ["affordable", "market_rate"]
+    - [180000, 350000]  # single_family: [affordable, market_rate] (USD)
+    - [120000, 220000]  # apartment: [affordable, market_rate] (USD)
+
+  # Construction parameters
+  construction_rate: 0.05  # base construction rate (5% of demand pressure per year)
+
+  # Price adjustment parameters
+  price_elasticity: 0.8  # price elasticity factor (0.8 = moderately elastic)
+
+  # Housing demand parameters
+  demand_per_person: 0.4  # housing units demanded per person
+  
+  # Income demand multipliers [housing_type, price_bracket]
+  income_demand_multiplier:
+    # Housing types: ["single_family", "apartment"]
+    # Price brackets: ["affordable", "market_rate"]
+    - [0.6, 1.2]  # single_family: [affordable, market_rate] - higher income = more single family
+    - [1.4, 0.8]  # apartment: [affordable, market_rate] - lower income = more apartments
+
+  # Demand pressure sensitivity
+  demand_pressure_sensitivity: 0.5  # sensitivity of construction to demand-supply imbalance
+
+  # Economic condition parameters
+  base_economic_factor: 1.0  # baseline economic conditions factor
+  economic_growth_impact: 0.015  # impact of economic growth on construction (1.5% per year)
+
+# Model configuration overrides
+model_config:
+  time_horizon: 50
+  dt: 0.25

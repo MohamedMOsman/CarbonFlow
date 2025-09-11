@@ -1,0 +1,35 @@
+{
+  "components": [
+    "Stock"
+  ],
+  "dimensions": {
+    "new_dimension": {
+      "labels": [
+        "new_dimension_0",
+        "new_dimension_1",
+        "new_dimension_2"
+      ],
+      "description": "Dimension new_dimension",
+      "type": "categorical",
+      "size": 3,
+      "metadata": {
+        "user_created": false,
+        "source": "default"
+      }
+    },
+    "u": {
+      "labels": [
+        "u",
+        "i"
+      ],
+      "description": "",
+      "type": "categorical",
+      "size": 2,
+      "metadata": {
+        "user_created": true,
+        "creation_method": "manual"
+      }
+    }
+  },
+  "data_matrix": {
+    

@@ -1,0 +1,83 @@
+# Economic Indicators Module Scenario Parameters
+# This file contains parameter values for the economic indicators module
+# Used with economic-indicators/model_structure.yaml
+
+scenario:
+  name: "Economic Indicators Baseline Scenario"
+  description: "Baseline scenario for economic indicators with moderate employment and income growth"
+  version: "1.0"
+  created_date: "2024-01-15"
+  model_file: "model_structure.yaml"
+
+# Parameter values for economic indicators
+constants:
+  # Employed population distribution [age_group, gender, year] - initial values
+  employed_population_distribution:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    - [0, 0]        # 0-14: [male, female] - no employment
+    - [12000, 11500] # 15-29: [male, female] - high employment
+    - [16000, 15000] # 30-44: [male, female] - peak employment
+    - [12000, 11000] # 45-59: [male, female] - moderate employment
+    - [2000, 1800]   # 60+: [male, female] - low employment
+
+  # Average income distribution [age_group, income_bracket, year] - initial values
+  average_income_distribution:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Income brackets: ["low", "medium", "high"]
+    - [0, 0, 0]           # 0-14: [low, med, high] - no income
+    - [28000, 45000, 75000] # 15-29: [low, med, high] - entry level
+    - [35000, 60000, 95000] # 30-44: [low, med, high] - career peak
+    - [40000, 65000, 105000] # 45-59: [low, med, high] - senior level
+    - [25000, 40000, 70000]  # 60+: [low, med, high] - retirement transition
+
+  # Employment parameters
+  employment_rate: 0.85  # base employment rate (85% of labor force)
+  
+  # Labor participation rates [age_group, gender]
+  labor_participation_rate:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    - [0.0, 0.0]    # 0-14: [male, female] - no participation
+    - [0.85, 0.80]  # 15-29: [male, female] - high participation
+    - [0.92, 0.85]  # 30-44: [male, female] - peak participation
+    - [0.88, 0.82]  # 45-59: [male, female] - moderate participation
+    - [0.35, 0.25]  # 60+: [male, female] - low participation
+
+  # Income parameters
+  income_growth_rate: 0.025  # base income growth rate (2.5% per year)
+  
+  # Base income levels [age_group, income_bracket]
+  base_income:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Income brackets: ["low", "medium", "high"]
+    - [0, 0, 0]           # 0-14: [low, med, high] - no income
+    - [25000, 42000, 70000] # 15-29: [low, med, high] - entry level
+    - [32000, 55000, 90000] # 30-44: [low, med, high] - career development
+    - [38000, 62000, 100000] # 45-59: [low, med, high] - senior level
+    - [22000, 38000, 65000]  # 60+: [low, med, high] - reduced income
+
+  # Labor force participation parameters
+  base_participation_rate:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    - [0.0, 0.0]    # 0-14: [male, female] - no participation
+    - [0.82, 0.78]  # 15-29: [male, female] - base participation
+    - [0.90, 0.83]  # 30-44: [male, female] - base participation
+    - [0.85, 0.80]  # 45-59: [male, female] - base participation
+    - [0.32, 0.23]  # 60+: [male, female] - base participation
+
+  # Participation trend (annual change in participation rate)
+  participation_trend:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    - [0.0, 0.0]      # 0-14: [male, female] - no change
+    - [0.002, 0.005]  # 15-29: [male, female] - slight increase
+    - [0.001, 0.003]  # 30-44: [male, female] - slight increase
+    - [0.000, 0.002]  # 45-59: [male, female] - minimal change
+    - [0.001, 0.001]  # 60+: [male, female] - minimal change
+
+# Model configuration overrides
+model_config:
+  time_horizon: 50
+  dt: 0.25

@@ -1,0 +1,204 @@
+# Economic Indicators Module Structure
+# This file defines the simplified economic model structure with employment and income tracking
+# Scenario-specific parameters are defined in separate scenario_parameters.yaml file
+
+model:
+  name: "Economic Indicators Module"
+  description: "Simplified employment and income modeling with population dependencies"
+  time_horizon: 50
+  dt: 0.25
+  time_units: "year"
+
+# Dimension specifications (simplified from original requirements)
+dimensions:
+  age_group:
+    size: 5
+    labels: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    description: "Age cohorts for economic analysis"
+    coordinates: [7, 22, 37, 52, 70]  # Representative ages
+  
+  gender:
+    size: 2
+    labels: ["male", "female"]
+    description: "Gender categories"
+    coordinates: [0, 1]  # Binary encoding
+  
+  income_bracket:
+    size: 3
+    labels: ["low", "medium", "high"]
+    description: "Income level categories"
+    coordinates: [30000, 60000, 120000]  # Representative income levels (USD/year)
+
+# Custom function definitions for economic calculations
+functions:
+  employment_flow_calculator:
+    expression: "employment_rate * labor_participation_rate * total_population"
+    dependencies: ["total_population"]
+    output_dimensions: ["age_group", "gender"]
+    description: "Calculate employment changes based on population and participation rates"
+  
+  income_flow_calculator:
+    expression: "income_growth_rate * base_income * employed_population"
+    dependencies: ["employed_population"]
+    output_dimensions: ["age_group", "income_bracket"]
+    description: "Calculate income changes based on employment and growth rates"
+
+# Model elements definition
+elements:
+  stocks:
+    - name: "Employed_Population"
+      initial_value: "$employed_population_distribution"
+      units: "persons"
+      spatial_dims: ["age_group", "gender", "year"]
+      min_value: 0
+      description: "Working population evolution over time by age and gender"
+    
+    - name: "Average_Income"
+      initial_value: "$average_income_distribution"
+      units: "USD/year"
+      spatial_dims: ["age_group", "income_bracket", "year"]
+      min_value: 0
+      description: "Income levels over time by age and income bracket"
+  
+  flows:
+    - name: "Employment_Flow"
+      rate: "employment_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender"]
+      description: "Labor force participation changes"
+      parameters:
+        employment_rate: "$employment_rate"
+        labor_participation_rate: "$labor_participation_rate"
+    
+    - name: "Income_Flow"
+      rate: "income_flow_calculator"
+      units: "USD/year/year"
+      spatial_dims: ["age_group", "income_bracket"]
+      description: "Average income changes"
+      parameters:
+        income_growth_rate: "$income_growth_rate"
+        base_income: "$base_income"
+
+  calculators:
+    - name: "Employment_Rate_Calc"
+      expression: "Employed_Population / total_population"
+      units: "dimensionless"
+      spatial_dims: ["age_group", "gender"]
+      description: "Employment rate = employed population / total population"
+      dependencies: ["Employed_Population", "total_population"]
+    
+    - name: "Total_Income_Calc"
+      expression: "np.sum(Employed_Population[:, :, np.newaxis] * Average_Income, axis=1)"
+      units: "USD/year"
+      spatial_dims: ["age_group", "income_bracket"]
+      description: "Total income = employed population * average income"
+      dependencies: ["Employed_Population", "Average_Income"]
+    
+    - name: "Economic_Output_Calc"
+      expression: "np.sum(Total_Income_Calc)"
+      units: "USD/year"
+      description: "Total economic output across all demographics"
+      dependencies: ["Total_Income_Calc"]
+
+  auxiliaries:
+    - name: "Labor_Force_Participation"
+      calculation: "base_participation_rate * (1 + participation_trend * time)"
+      units: "dimensionless"
+      spatial_dims: ["age_group", "gender"]
+      description: "Labor force participation rate over time"
+      parameters:
+        base_participation_rate: "$base_participation_rate"
+        participation_trend: "$participation_trend"
+    
+    - name: "Unemployment_Rate"
+      calculation: "1.0 - Employment_Rate_Calc"
+      units: "dimensionless"
+      spatial_dims: ["age_group", "gender"]
+      description: "Unemployment rate by demographics"
+      parameters: {}
+    
+    - name: "Income_Inequality_Index"
+      calculation: "(Average_Income[:, 2] - Average_Income[:, 0]) / Average_Income[:, 1]"
+      units: "dimensionless"
+      spatial_dims: ["age_group"]
+      description: "Income inequality index (high-low)/medium by age group"
+      parameters: {}
+
+# External dependencies (from other modules)
+external_dependencies:
+  - name: "total_population"
+    source_module: "population-dynamics"
+    source_element: "Total_Population"
+    description: "Total population from population dynamics module"
+    spatial_dims: ["age_group", "gender", "year"]
+
+# Connections between model elements
+connections:
+  # Employment stock connections
+  - from: "Employment_Flow"
+    to: "Employed_Population"
+    type: "inflow"
+  
+  # Income stock connections
+  - from: "Income_Flow"
+    to: "Average_Income"
+    type: "inflow"
+  
+  # Calculator dependencies
+  - from: "Employed_Population"
+    to: "Employment_Rate_Calc"
+    type: "dependency"
+  
+  - from: "Employed_Population"
+    to: "Total_Income_Calc"
+    type: "dependency"
+  
+  - from: "Average_Income"
+    to: "Total_Income_Calc"
+    type: "dependency"
+  
+  - from: "Total_Income_Calc"
+    to: "Economic_Output_Calc"
+    type: "dependency"
+  
+  # Auxiliary dependencies
+  - from: "Employment_Rate_Calc"
+    to: "Unemployment_Rate"
+    type: "dependency"
+  
+  - from: "Average_Income"
+    to: "Income_Inequality_Index"
+    type: "dependency"
+  
+  # External dependencies
+  - from: "total_population"
+    to: "Employment_Flow"
+    type: "dependency"
+  
+  - from: "total_population"
+    to: "Employment_Rate_Calc"
+    type: "dependency"
+
+# Validation rules for model consistency
+validation:
+  dimension_consistency:
+    - check: "employment_shape_matches_dimensions"
+      message: "Employment array shape must match defined dimensions"
+    
+    - check: "income_dimensions_consistent"
+      message: "Income flows must have consistent dimensional structure"
+  
+  parameter_bounds:
+    - parameter: "employment_rate"
+      min: 0
+      max: 1
+      message: "Employment rate must be between 0 and 1"
+    
+    - parameter: "income_growth_rate"
+      min: -0.1
+      max: 0.2
+      message: "Income growth rate must be between -10% and 20% per year"
+  
+  economic_constraints:
+    - check: "employment_population_consistency"
+      message: "Employed population cannot exceed total population"

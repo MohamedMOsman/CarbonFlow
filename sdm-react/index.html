@@ -16,6 +16,11 @@
     <style>
       body { font-family: 'Inter', sans-serif; overscroll-behavior: none; }
       .connector-dot { cursor: crosshair; }
+      /* Shape styles for different component types */
+      .shape-stock { border-radius: 3px; }
+      .shape-flow { clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 10% 65%, 0% 50%, 10% 35%); }
+      .shape-calculator { border-radius: 9999px; }
+      .shape-parameter { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); }
     </style>
   </head>
   <body class="bg-gray-100 text-gray-800 h-screen overflow-hidden">
@@ -24,4 +29,3 @@
   </body>
   
 </html>
-

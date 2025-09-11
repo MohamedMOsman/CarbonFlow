@@ -1,0 +1,179 @@
+# Climate Adaptation Scenario Parameters
+# This file contains parameter values for the climate adaptation scenario
+# Used with climate_adaptation_model.yaml structure
+
+scenario:
+  name: "Comprehensive Climate Adaptation Scenario"
+  description: "Aggressive flood protection measures for climate adaptation"
+  version: "1.0"
+  created_date: "2024-01-15"
+  model_file: "climate_adaptation_model.yaml"
+
+# Parameter overrides for climate adaptation scenario
+constants:
+  # Enhanced structure basement height distribution [parcel, year_built_cohort, building_type]
+  # Values represent more aggressive flood protection measures across aggregated buildings within parcels
+  # Enhanced baseline conditions for aggressive adaptation scenario
+  initial_structure_basement_height:
+    # parcel_1001: Enhanced protection
+    - [
+        [2.5, 2.2],  # pre_war_cohort: [residential, commercial]
+        [3.0, 2.7],  # post_war_cohort
+        [3.5, 3.2]   # modern_cohort
+      ]
+    # parcel_1002: Enhanced protection
+    - [
+        [2.7, 2.4],  # pre_war_cohort
+        [3.2, 2.9],  # post_war_cohort
+        [3.7, 3.4]   # modern_cohort
+      ]
+    # parcel_1003: Maximum protection
+    - [
+        [2.9, 2.6],  # pre_war_cohort
+        [3.4, 3.1],  # post_war_cohort
+        [3.9, 3.6]   # modern_cohort
+      ]
+
+  # Enhanced structure offset from ground [parcel, year_built_cohort, building_type]
+  # Higher elevation offsets for better flood protection across aggregated buildings within parcels
+  # Enhanced baseline conditions for aggressive adaptation scenario
+  initial_structure_offset_from_ground:
+    # parcel_1001: Enhanced elevation
+    - [
+        [1.0, 0.8],  # pre_war_cohort: [residential, commercial]
+        [1.4, 1.2],  # post_war_cohort
+        [1.8, 1.6]   # modern_cohort
+      ]
+    # parcel_1002: Enhanced elevation
+    - [
+        [1.2, 1.0],  # pre_war_cohort
+        [1.6, 1.4],  # post_war_cohort
+        [2.0, 1.8]   # modern_cohort
+      ]
+    # parcel_1003: Maximum elevation
+    - [
+        [1.4, 1.2],  # pre_war_cohort
+        [1.8, 1.6],  # post_war_cohort
+        [2.2, 2.0]   # modern_cohort
+      ]
+
+
+
+
+
+  # Enhanced improvement rates for aggressive adaptation - multidimensional [parcel, year_built_cohort, building_type]
+  # Higher basement height improvement rates for aggressive climate adaptation scenario
+  basement_height_improvement_rate:
+    # parcel_1001: Enhanced improvement rates
+    - [
+        [0.025, 0.022],  # pre_war_cohort: [residential, commercial] - enhanced improvement
+        [0.035, 0.030],  # post_war_cohort - aggressive improvement
+        [0.045, 0.040]   # modern_cohort - maximum improvement potential
+      ]
+    # parcel_1002: Enhanced improvement rates
+    - [
+        [0.030, 0.025],  # pre_war_cohort
+        [0.040, 0.035],  # post_war_cohort
+        [0.050, 0.045]   # modern_cohort
+      ]
+    # parcel_1003: Maximum improvement rates due to priority status
+    - [
+        [0.035, 0.030],  # pre_war_cohort
+        [0.045, 0.040],  # post_war_cohort
+        [0.055, 0.050]   # modern_cohort
+      ]
+
+  # Enhanced structure offset improvement rates for aggressive adaptation
+  offset_improvement_rate:
+    # parcel_1001: Enhanced improvement rates
+    - [
+        [0.018, 0.015],  # pre_war_cohort: [residential, commercial]
+        [0.025, 0.022],  # post_war_cohort
+        [0.032, 0.028]   # modern_cohort
+      ]
+    # parcel_1002: Enhanced improvement rates
+    - [
+        [0.022, 0.018],  # pre_war_cohort
+        [0.028, 0.025],  # post_war_cohort
+        [0.035, 0.032]   # modern_cohort
+      ]
+    # parcel_1003: Maximum improvement rates
+    - [
+        [0.025, 0.022],  # pre_war_cohort
+        [0.032, 0.028],  # post_war_cohort
+        [0.040, 0.035]   # modern_cohort
+      ]
+  # Additional scenario-specific parameters
+  flood_protection_investment_multiplier: 1.5    # 50% increase in flood protection investment
+  climate_urgency_factor: 2.0                    # Urgency multiplier for adaptation measures
+  
+  # Regional adaptation priorities (dimensionless weights)
+  regional_adaptation_priorities:
+    urban_core: 0.4      # 40% priority weight
+    suburban: 0.35       # 35% priority weight  
+    rural: 0.25          # 25% priority weight
+
+  # Building type adaptation focus
+  building_adaptation_focus:
+    residential: 0.6     # 60% focus on residential buildings
+    commercial: 0.4      # 40% focus on commercial buildings
+
+  # Time-sensitive adaptation parameters
+  early_action_bonus: 1.25        # 25% bonus for early implementation
+  delayed_action_penalty: 0.8     # 20% penalty for delayed implementation
+  
+  # Climate scenario weighting
+  scenario_probability_weights:
+    rcp45: 0.4          # 40% probability weight for moderate scenario
+    rcp85: 0.6          # 60% probability weight for high emissions scenario
+
+  # Risk-based adaptation scaling
+  risk_adaptation_scaling:
+    low_risk: 0.7       # 70% of standard adaptation for low-risk areas
+    medium_risk: 1.0    # 100% standard adaptation for medium-risk areas
+    high_risk: 1.4      # 140% enhanced adaptation for high-risk areas
+
+  # Economic efficiency parameters
+  cost_effectiveness_threshold: 0.75    # Minimum cost-effectiveness ratio
+  benefit_cost_ratio_target: 2.5       # Target benefit-cost ratio
+  
+  # Implementation timeline parameters
+  implementation_ramp_up_years: 5       # Years to reach full implementation capacity
+  maintenance_factor: 0.95              # Annual maintenance effectiveness factor
+  technology_improvement_rate: 0.02     # Annual technology improvement rate (2%)
+
+# Model configuration overrides for longer-term adaptation planning
+model_config:
+  time_horizon: 100     # Extended to 100 years for long-term adaptation planning
+  dt: 0.25             # Quarterly time steps for detailed tracking
+  
+  # Output configuration
+  output_frequency: 1   # Annual output frequency
+  detailed_tracking: true
+  
+  # Validation settings
+  enable_validation: true
+  validation_frequency: 5  # Validate every 5 years
+  
+  # Sensitivity analysis settings
+  enable_sensitivity_analysis: true
+  sensitivity_parameters:
+    - "basement_height_improvement_rate"
+    - "offset_improvement_rate"
+    - "climate_urgency_factor"
+
+# Scenario-specific analysis settings
+analysis:
+  focus_metrics:
+    - "Total_Flood_Protection"
+    - "Net_Temperature_Change"
+    - "Adaptation_Effectiveness"
+  
+  comparison_baseline: "no_adaptation_baseline"
+  
+  reporting_intervals: [10, 25, 50, 75, 100]  # Years for detailed reporting
+  
+  uncertainty_analysis:
+    enabled: true
+    monte_carlo_runs: 1000
+    confidence_intervals: [0.05, 0.95]  # 90% confidence interval

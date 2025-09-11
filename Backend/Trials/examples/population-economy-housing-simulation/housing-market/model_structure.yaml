@@ -1,0 +1,255 @@
+# Housing Market Module Structure
+# This file defines the basic housing supply/demand/pricing model structure
+# Scenario-specific parameters are defined in separate scenario_parameters.yaml file
+
+model:
+  name: "Housing Market Module"
+  description: "Basic housing supply, demand, and pricing dynamics with population and economic dependencies"
+  time_horizon: 50
+  dt: 0.25
+  time_units: "year"
+
+# Dimension specifications (simplified)
+dimensions:
+  housing_type:
+    size: 2
+    labels: ["single_family", "apartment"]
+    description: "Housing type categories"
+    coordinates: [1, 2]  # Numeric encoding
+  
+  price_bracket:
+    size: 2
+    labels: ["affordable", "market_rate"]
+    description: "Housing price categories"
+    coordinates: [1, 2]  # Numeric encoding
+
+# Custom function definitions for housing market calculations
+functions:
+  construction_flow_calculator:
+    expression: "construction_rate * housing_demand_pressure * economic_conditions"
+    dependencies: ["housing_demand_pressure", "economic_conditions"]
+    output_dimensions: ["housing_type", "price_bracket"]
+    description: "Calculate new housing construction based on demand and economic conditions"
+  
+  price_adjustment_calculator:
+    expression: "price_elasticity * (housing_demand_calc - housing_supply) / housing_supply"
+    dependencies: ["housing_demand_calc", "housing_supply"]
+    output_dimensions: ["housing_type", "price_bracket"]
+    description: "Calculate housing price adjustments based on supply-demand balance"
+
+# Model elements definition
+elements:
+  stocks:
+    - name: "Housing_Inventory"
+      initial_value: "$housing_inventory_distribution"
+      units: "units"
+      spatial_dims: ["housing_type", "price_bracket"]
+      min_value: 0
+      description: "Existing housing stock by type and price bracket"
+    
+    - name: "Housing_Supply"
+      initial_value: "$housing_supply_distribution"
+      units: "units"
+      spatial_dims: ["housing_type", "price_bracket", "year"]
+      min_value: 0
+      description: "Evolving housing availability over time"
+    
+    - name: "Average_Housing_Price"
+      initial_value: "$average_housing_price_distribution"
+      units: "USD"
+      spatial_dims: ["housing_type", "price_bracket", "year"]
+      min_value: 0
+      description: "Market prices over time by housing type and price bracket"
+  
+  flows:
+    - name: "Construction_Flow"
+      rate: "construction_flow_calculator"
+      units: "units/year"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "New housing development"
+      parameters:
+        construction_rate: "$construction_rate"
+    
+    - name: "Price_Adjustment_Flow"
+      rate: "price_adjustment_calculator"
+      units: "USD/year"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Market price changes"
+      parameters:
+        price_elasticity: "$price_elasticity"
+
+  calculators:
+    - name: "Housing_Demand_Calc"
+      expression: "demand_per_person * total_population * income_demand_multiplier"
+      units: "units"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Housing demand based on population and income"
+      dependencies: ["total_population", "employed_population"]
+    
+    - name: "Affordability_Index_Calc"
+      expression: "average_income / Average_Housing_Price"
+      units: "dimensionless"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Affordability index = average income / housing price"
+      dependencies: ["average_income", "Average_Housing_Price"]
+    
+    - name: "Housing_Supply_Demand_Ratio"
+      expression: "Housing_Supply / Housing_Demand_Calc"
+      units: "dimensionless"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Supply-demand balance indicator"
+      dependencies: ["Housing_Supply", "Housing_Demand_Calc"]
+    
+    - name: "Total_Housing_Value"
+      expression: "Housing_Supply * Average_Housing_Price"
+      units: "USD"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Total housing market value"
+      dependencies: ["Housing_Supply", "Average_Housing_Price"]
+
+  auxiliaries:
+    - name: "Housing_Demand_Pressure"
+      calculation: "1.0 + demand_pressure_sensitivity * (Housing_Demand_Calc - Housing_Supply) / Housing_Supply"
+      units: "dimensionless"
+      spatial_dims: ["housing_type", "price_bracket"]
+      description: "Demand pressure factor for construction"
+      parameters:
+        demand_pressure_sensitivity: "$demand_pressure_sensitivity"
+    
+    - name: "Economic_Conditions"
+      calculation: "base_economic_factor * (1.0 + economic_growth_impact * time)"
+      units: "dimensionless"
+      description: "Economic conditions affecting construction"
+      parameters:
+        base_economic_factor: "$base_economic_factor"
+        economic_growth_impact: "$economic_growth_impact"
+    
+    - name: "Housing_Market_Health"
+      calculation: "np.mean(Housing_Supply_Demand_Ratio)"
+      units: "dimensionless"
+      description: "Overall housing market health indicator"
+      parameters: {}
+
+# External dependencies (from other modules)
+external_dependencies:
+  - name: "total_population"
+    source_module: "population-dynamics"
+    source_element: "Total_Population"
+    description: "Total population from population dynamics module"
+    spatial_dims: ["age_group", "gender", "year"]
+  
+  - name: "employed_population"
+    source_module: "economic-indicators"
+    source_element: "Employed_Population"
+    description: "Employed population from economic indicators module"
+    spatial_dims: ["age_group", "gender", "year"]
+  
+  - name: "average_income"
+    source_module: "economic-indicators"
+    source_element: "Average_Income"
+    description: "Average income from economic indicators module"
+    spatial_dims: ["age_group", "income_bracket", "year"]
+
+# Connections between model elements
+connections:
+  # Housing stock connections
+  - from: "Construction_Flow"
+    to: "Housing_Supply"
+    type: "inflow"
+  
+  # Price stock connections
+  - from: "Price_Adjustment_Flow"
+    to: "Average_Housing_Price"
+    type: "inflow"
+  
+  # Calculator dependencies
+  - from: "Housing_Supply"
+    to: "Housing_Demand_Calc"
+    type: "dependency"
+  
+  - from: "Housing_Supply"
+    to: "Housing_Supply_Demand_Ratio"
+    type: "dependency"
+  
+  - from: "Housing_Demand_Calc"
+    to: "Housing_Supply_Demand_Ratio"
+    type: "dependency"
+  
+  - from: "Average_Housing_Price"
+    to: "Affordability_Index_Calc"
+    type: "dependency"
+  
+  - from: "Housing_Supply"
+    to: "Total_Housing_Value"
+    type: "dependency"
+  
+  - from: "Average_Housing_Price"
+    to: "Total_Housing_Value"
+    type: "dependency"
+  
+  # Auxiliary dependencies
+  - from: "Housing_Demand_Calc"
+    to: "Housing_Demand_Pressure"
+    type: "dependency"
+  
+  - from: "Housing_Supply"
+    to: "Housing_Demand_Pressure"
+    type: "dependency"
+  
+  - from: "Housing_Supply_Demand_Ratio"
+    to: "Housing_Market_Health"
+    type: "dependency"
+  
+  # Flow dependencies
+  - from: "Housing_Demand_Pressure"
+    to: "Construction_Flow"
+    type: "dependency"
+  
+  - from: "Economic_Conditions"
+    to: "Construction_Flow"
+    type: "dependency"
+  
+  - from: "Housing_Demand_Calc"
+    to: "Price_Adjustment_Flow"
+    type: "dependency"
+  
+  - from: "Housing_Supply"
+    to: "Price_Adjustment_Flow"
+    type: "dependency"
+  
+  # External dependencies
+  - from: "total_population"
+    to: "Housing_Demand_Calc"
+    type: "dependency"
+  
+  - from: "employed_population"
+    to: "Housing_Demand_Calc"
+    type: "dependency"
+  
+  - from: "average_income"
+    to: "Affordability_Index_Calc"
+    type: "dependency"
+
+# Validation rules for model consistency
+validation:
+  dimension_consistency:
+    - check: "housing_shape_matches_dimensions"
+      message: "Housing arrays must match defined dimensions"
+    
+    - check: "price_dimensions_consistent"
+      message: "Price flows must have consistent dimensional structure"
+  
+  parameter_bounds:
+    - parameter: "construction_rate"
+      min: 0
+      max: 0.2
+      message: "Construction rate must be between 0 and 20% per year"
+    
+    - parameter: "price_elasticity"
+      min: 0
+      max: 2
+      message: "Price elasticity must be between 0 and 2"
+  
+  market_constraints:
+    - check: "supply_demand_balance"
+      message: "Housing supply and demand must be economically reasonable"

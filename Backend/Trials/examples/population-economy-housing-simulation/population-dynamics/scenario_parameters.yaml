@@ -1,0 +1,94 @@
+# Population Dynamics Module Scenario Parameters
+# This file contains parameter values for the population dynamics module
+# Used with population-dynamics/model_structure.yaml
+
+scenario:
+  name: "Population Dynamics Baseline Scenario"
+  description: "Baseline scenario for population dynamics with moderate immigration patterns"
+  version: "1.0"
+  created_date: "2024-01-15"
+  model_file: "model_structure.yaml"
+
+# Parameter values for population dynamics
+constants:
+  # Base population distribution [age_group, gender]
+  base_population_distribution:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    - [12000, 11500]  # 0-14: [male, female]
+    - [15000, 14800]  # 15-29: [male, female]
+    - [18000, 17500]  # 30-44: [male, female]
+    - [14000, 13800]  # 45-59: [male, female]
+    - [8000, 9200]    # 60+: [male, female]
+
+  # Total population distribution [age_group, gender, year] - initial values
+  total_population_distribution:
+    # Same as base_population_distribution for initial year
+    - [12000, 11500]  # 0-14: [male, female]
+    - [15000, 14800]  # 15-29: [male, female]
+    - [18000, 17500]  # 30-44: [male, female]
+    - [14000, 13800]  # 45-59: [male, female]
+    - [8000, 9200]    # 60+: [male, female]
+
+  # Immigration parameters
+  base_immigration_rate: 0.003  # base immigration rate per person per year
+  
+  # Immigration multipliers [age_group, gender, income_bracket]
+  immigration_multiplier:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    # Income: ["low", "medium", "high"]
+    - [[0.5, 0.8, 1.2], [0.5, 0.8, 1.2]]  # 0-14: [male, female] x [low, med, high]
+    - [[1.5, 1.8, 2.2], [1.4, 1.7, 2.0]]  # 15-29: [male, female] x [low, med, high]
+    - [[1.2, 1.5, 1.8], [1.1, 1.4, 1.7]]  # 30-44: [male, female] x [low, med, high]
+    - [[0.8, 1.0, 1.2], [0.7, 0.9, 1.1]]  # 45-59: [male, female] x [low, med, high]
+    - [[0.3, 0.4, 0.5], [0.3, 0.4, 0.5]]  # 60+: [male, female] x [low, med, high]
+
+  # Emigration parameters
+  base_emigration_rate: 0.001  # base emigration rate per person per year
+  
+  # Emigration multipliers [age_group, gender, income_bracket]
+  emigration_multiplier:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    # Income: ["low", "medium", "high"]
+    - [[0.3, 0.4, 0.6], [0.3, 0.4, 0.6]]  # 0-14: [male, female] x [low, med, high]
+    - [[0.8, 1.0, 1.4], [0.7, 0.9, 1.2]]  # 15-29: [male, female] x [low, med, high]
+    - [[0.6, 0.8, 1.2], [0.5, 0.7, 1.0]]  # 30-44: [male, female] x [low, med, high]
+    - [[0.4, 0.5, 0.8], [0.4, 0.5, 0.7]]  # 45-59: [male, female] x [low, med, high]
+    - [[0.2, 0.3, 0.4], [0.2, 0.3, 0.4]]  # 60+: [male, female] x [low, med, high]
+
+  # Birth parameters
+  fertility_rate: 0.018  # base fertility rate per person per year
+  
+  # Fertility multipliers [age_group, income_bracket]
+  fertility_multiplier:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Income: ["low", "medium", "high"]
+    - [0.0, 0.0, 0.0]    # 0-14: [low, med, high] - no fertility
+    - [1.8, 1.5, 1.2]    # 15-29: [low, med, high] - peak fertility
+    - [1.2, 1.0, 0.8]    # 30-44: [low, med, high] - moderate fertility
+    - [0.3, 0.2, 0.1]    # 45-59: [low, med, high] - low fertility
+    - [0.0, 0.0, 0.0]    # 60+: [low, med, high] - no fertility
+
+  # Death parameters
+  mortality_rate: 0.008  # base mortality rate per person per year
+  
+  # Mortality multipliers [age_group, gender, income_bracket]
+  mortality_multiplier:
+    # Age groups: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    # Gender: ["male", "female"]
+    # Income: ["low", "medium", "high"]
+    - [[1.2, 0.8, 0.6], [1.0, 0.7, 0.5]]  # 0-14: [male, female] x [low, med, high]
+    - [[1.1, 0.9, 0.7], [0.8, 0.6, 0.4]]  # 15-29: [male, female] x [low, med, high]
+    - [[1.3, 1.0, 0.8], [1.0, 0.8, 0.6]]  # 30-44: [male, female] x [low, med, high]
+    - [[1.8, 1.4, 1.0], [1.5, 1.2, 0.9]]  # 45-59: [male, female] x [low, med, high]
+    - [[2.5, 2.0, 1.5], [2.2, 1.8, 1.3]]  # 60+: [male, female] x [low, med, high]
+
+  # Economic parameters
+  economic_growth_rate: 0.02  # annual economic growth rate affecting immigration
+
+# Model configuration overrides
+model_config:
+  time_horizon: 50
+  dt: 1

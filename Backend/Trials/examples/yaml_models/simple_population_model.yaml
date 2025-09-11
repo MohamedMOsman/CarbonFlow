@@ -1,0 +1,107 @@
+# Simple Population Model Structure
+# This file defines the model structure (stocks, flows, calculators, dimensions, connections)
+# Scenario files only contain parameter values that override the defaults
+
+model:
+  name: "Simple Population Model"
+  description: "Basic multidimensional population model with births, deaths, and migration"
+  time_horizon: 50
+  dt: 0.25
+  time_units: "year"
+
+# Default constants (can be overridden by scenario files)
+constants:
+  # Default population distribution [age_group, income_level, region]
+  base_population_distribution:
+    - [[1000, 800, 600], [1200, 1000, 800]]    # young: [low, med, high] x [urban, rural]
+    - [[2000, 1800, 1200], [1500, 1300, 1000]]   # adult: [low, med, high] x [urban, rural]
+    - [[600, 500, 300], [400, 350, 250]]         # elderly: [low, med, high] x [urban, rural]
+
+  # Default demographic rates
+  fertility_rate: 0.020      # births per person per year
+  mortality_rate: 0.012      # deaths per person per year
+  immigration_rate: 0.002    # immigration per person per year
+  emigration_rate: 0.001     # emigration per person per year
+
+# Dimensions definition
+dimensions:
+  age_group:
+    size: 3
+    labels: ["young_0_18", "adult_19_65", "elderly_65_plus"]
+  income_level:
+    size: 3
+    labels: ["low_income", "medium_income", "high_income"]
+  region:
+    size: 2
+    labels: ["urban", "rural"]
+
+# Model elements
+elements:
+  stocks:
+    - name: "Population"
+      initial_value:
+        array:
+          shape: [3, 3, 2]
+          values: "$base_population_distribution"
+      units: "people"
+      spatial_dims: ["age_group", "income_level", "region"]
+      min_value: 0
+      description: "Population by age, income, and region"
+
+  flows:
+    - name: "Births"
+      rate: "$fertility_rate"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Birth flow across all demographic dimensions"
+
+    - name: "Deaths"
+      rate: "$mortality_rate"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Death flow across all demographic dimensions"
+
+    - name: "Immigration"
+      rate: "$immigration_rate"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Immigration flow"
+
+    - name: "Emigration"
+      rate: "$emigration_rate"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Emigration flow"
+
+  calculators:
+    - name: "Net_Immigration"
+      expression: "(Immigration - Emigration) * Population"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Net immigration = immigration - emigration"
+      dependencies: ["Immigration", "Emigration"]
+
+    - name: "Population_Growth"
+      expression: "(Births - Deaths) * Population"  
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Natural population growth = births - deaths"
+      dependencies: ["Births", "Deaths"]
+
+    - name: "Total_Population_Change"
+      expression: "Population_Growth + Net_Immigration"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Total population change = natural growth + net migration"
+      dependencies: ["Population_Growth", "Net_Immigration"]
+
+# Connections between model elements
+connections:
+  # Population stock connections
+  - from: "Population_Growth"
+    to: "Population"
+    type: "inflow"
+
+  - from: "Net_Immigration"
+    to: "Population"
+    type: "inflow"

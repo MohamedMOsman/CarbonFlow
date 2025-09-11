@@ -1,0 +1,199 @@
+# Population Dynamics Module Structure
+# This file defines the population model structure with dimensions, stocks, flows, and calculators
+# Scenario-specific parameters are defined in separate scenario_parameters.yaml file
+
+model:
+  name: "Population Dynamics Module"
+  description: "Population modeling with immigration/emigration flows and multidimensional demographics"
+  time_horizon: 50
+  dt: 0.25
+  time_units: "year"
+
+# Dimension specifications with explicit names, sizes, and coordinate labels
+dimensions:
+  age_group:
+    size: 5
+    labels: ["0-14", "15-29", "30-44", "45-59", "60+"]
+    description: "Age cohorts for demographic analysis"
+    coordinates: [7, 22, 37, 52, 70]  # Representative ages
+  
+  gender:
+    size: 2
+    labels: ["male", "female"]
+    description: "Gender categories"
+    coordinates: [0, 1]  # Binary encoding
+  
+  income_bracket:
+    size: 3
+    labels: ["low", "medium", "high"]
+    description: "Income level categories"
+    coordinates: [30000, 60000, 120000]  # Representative income levels (USD/year)
+
+# Custom function definitions for multidimensional calculations
+functions:
+  immigration_flow_calculator:
+    expression: "base_immigration_rate * immigration_multiplier * economic_attraction_factor"
+    dependencies: ["economic_attraction_factor"]
+    output_dimensions: ["age_group", "gender", "income_bracket"]
+    description: "Calculate immigration flows across demographic dimensions"
+  
+  emigration_flow_calculator:
+    expression: "base_emigration_rate * emigration_multiplier * total_population"
+    dependencies: ["total_population"]
+    output_dimensions: ["age_group", "gender", "income_bracket"]
+    description: "Calculate emigration flows based on population"
+  
+  birth_flow_calculator:
+    expression: "fertility_rate * fertility_multiplier * total_population"
+    dependencies: ["total_population"]
+    output_dimensions: ["age_group", "income_bracket"]
+    description: "Calculate births by age and income (gender-neutral input)"
+  
+  death_flow_calculator:
+    expression: "mortality_rate * mortality_multiplier * total_population"
+    dependencies: ["total_population"]
+    output_dimensions: ["age_group", "gender", "income_bracket"]
+    description: "Calculate deaths across all demographic dimensions"
+
+# Model elements definition
+elements:
+  stocks:
+    - name: "Base_Population"
+      initial_value: "$base_population_distribution"
+      units: "persons"
+      spatial_dims: ["age_group", "gender"]
+      min_value: 0
+      description: "Initial population distribution by age and gender"
+    
+    - name: "Total_Population"
+      initial_value: "$total_population_distribution"
+      units: "persons"
+      spatial_dims: ["age_group", "gender", "year"]
+      min_value: 0
+      description: "Population evolution over time by age and gender"
+  
+  flows:
+    - name: "Immigration_Flow"
+      rate: "immigration_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Immigration inflows by demographics"
+      parameters:
+        base_immigration_rate: "$base_immigration_rate"
+        immigration_multiplier: "$immigration_multiplier"
+    
+    - name: "Emigration_Flow"
+      rate: "emigration_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Emigration outflows by demographics"
+      parameters:
+        base_emigration_rate: "$base_emigration_rate"
+        emigration_multiplier: "$emigration_multiplier"
+    
+    - name: "Birth_Flow"
+      rate: "birth_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "income_bracket"]
+      description: "New births based on fertility rates"
+      parameters:
+        fertility_rate: "$fertility_rate"
+        fertility_multiplier: "$fertility_multiplier"
+    
+    - name: "Death_Flow"
+      rate: "death_flow_calculator"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Deaths based on mortality rates"
+      parameters:
+        mortality_rate: "$mortality_rate"
+        mortality_multiplier: "$mortality_multiplier"
+
+  calculators:
+    - name: "Net_Migration_Calc"
+      expression: "Immigration_Flow - Emigration_Flow"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender", "income_bracket"]
+      description: "Net migration = immigration - emigration"
+      dependencies: ["Immigration_Flow", "Emigration_Flow"]
+    
+    - name: "Natural_Growth_Calc"
+      expression: "Birth_Flow - Death_Flow"
+      units: "persons/year"
+      spatial_dims: ["age_group", "income_bracket"]
+      description: "Natural population growth = births - deaths"
+      dependencies: ["Birth_Flow", "Death_Flow"]
+    
+    - name: "Population_Change_Calc"
+      expression: "np.sum(Net_Migration_Calc, axis=2) + Natural_Growth_Calc"
+      units: "persons/year"
+      spatial_dims: ["age_group", "gender"]
+      description: "Total population change combining migration and natural growth"
+      dependencies: ["Net_Migration_Calc", "Natural_Growth_Calc"]
+
+  auxiliaries:
+    - name: "Economic_Attraction_Factor"
+      calculation: "1.0 + economic_growth_rate * time"
+      units: "dimensionless"
+      description: "Economic attraction factor for immigration"
+      parameters:
+        economic_growth_rate: "$economic_growth_rate"
+    
+    - name: "Population_Growth_Rate"
+      calculation: "Population_Change_Calc / Total_Population"
+      units: "1/year"
+      spatial_dims: ["age_group", "gender"]
+      description: "Population growth rate by demographics"
+      parameters: {}
+
+# Connections between model elements
+connections:
+  # Population stock connections
+  - from: "Population_Change_Calc"
+    to: "Total_Population"
+    type: "inflow"
+  
+  # Auxiliary dependencies
+  - from: "Total_Population"
+    to: "Population_Growth_Rate"
+    type: "dependency"
+  
+  - from: "Total_Population"
+    to: "Emigration_Flow"
+    type: "dependency"
+  
+  - from: "Total_Population"
+    to: "Birth_Flow"
+    type: "dependency"
+  
+  - from: "Total_Population"
+    to: "Death_Flow"
+    type: "dependency"
+  
+  - from: "Economic_Attraction_Factor"
+    to: "Immigration_Flow"
+    type: "dependency"
+
+# Validation rules for model consistency
+validation:
+  dimension_consistency:
+    - check: "population_shape_matches_dimensions"
+      message: "Population array shape must match defined dimensions"
+    
+    - check: "flow_dimensions_consistent"
+      message: "All flows must have consistent dimensional structure"
+  
+  parameter_bounds:
+    - parameter: "fertility_rate"
+      min: 0
+      max: 0.1
+      message: "Fertility rate must be between 0 and 0.1 per year"
+    
+    - parameter: "mortality_rate"
+      min: 0
+      max: 0.05
+      message: "Mortality rate must be between 0 and 0.05 per year"
+  
+  mass_balance:
+    - check: "population_conservation"
+      message: "Total population changes must equal net flows"

@@ -1,0 +1,160 @@
+# Multidimensional Calculator Example
+# Advanced example showing calculators with multidimensional arrays
+# for climate adaptation population modeling
+
+model:
+  name: "Multidimensional Population Model with Calculators"
+  description: "Climate adaptation model with multidimensional calculators"
+  time_horizon: 50
+  dt: 1
+  time_units: "year"
+
+# Constants for multidimensional arrays
+constants:
+  # Initial population distribution [age_group, income_level, region]
+  initial_population_distribution:
+    - [[1500, 1200, 800], [2000, 1800, 1000]]    # young: [low, med, high] x [urban, rural]
+    - [[2500, 2200, 1500], [1800, 1600, 1200]]   # adult: [low, med, high] x [urban, rural]
+    - [[800, 600, 400], [600, 500, 300]]         # elderly: [low, med, high] x [urban, rural]
+  
+  # Base rates
+  base_birth_rates:
+    - [0.035, 0.030, 0.025]  # young by income
+    - [0.025, 0.020, 0.015]  # adult by income  
+    - [0.000, 0.000, 0.000]  # elderly by income
+  
+  base_death_rates:
+    - [0.005, 0.003, 0.002]  # young by income
+    - [0.008, 0.006, 0.004]  # adult by income
+    - [0.025, 0.020, 0.015]  # elderly by income
+  
+  # Climate stress factors by region
+  climate_stress: [0.15, 0.25]  # [urban, rural]
+  
+  # Economic multipliers by region
+  economic_multipliers: [1.2, 0.8]  # [urban, rural]
+
+# Dimensions
+dimensions:
+  age_group:
+    size: 3
+    labels: ["young_0_18", "adult_19_65", "elderly_65_plus"]
+  income_level:
+    size: 3
+    labels: ["low_income", "medium_income", "high_income"]
+  region:
+    size: 2
+    labels: ["urban", "rural"]
+
+# Model elements
+elements:
+  stocks:
+    - name: "Population"
+      initial_value:
+        array:
+          shape: [3, 3, 2]
+          values: "$initial_population_distribution"
+      units: "people"
+      spatial_dims: ["age_group", "income_level", "region"]
+      min_value: 0
+      description: "Multidimensional population by age, income, and region"
+
+  flows:
+    - name: "Birth_Flow"
+      rate: 0.025  # Base rate, will be modified by calculators
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Births across all demographic dimensions"
+    
+    - name: "Death_Flow"
+      rate: 0.015  # Base rate, will be modified by calculators
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Deaths across all demographic dimensions"
+    
+    - name: "Climate_Migration_Out"
+      rate: 0.005
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Climate-induced out-migration"
+    
+    - name: "Economic_Migration_In"
+      rate: 0.003
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Economic-driven in-migration"
+
+  calculators:
+    - name: "Net_Migration_Flow"
+      expression: "4 * Economic_Migration_In - Climate_Migration_Out"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Net migration = economic in-migration - climate out-migration"
+      dependencies: ["Economic_Migration_In", "Climate_Migration_Out"]
+
+
+    - name: "Natural_Growth_Flow"
+      expression: "Birth_Flow - Death_Flow"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Natural population growth = births - deaths"
+      dependencies: ["Birth_Flow", "Death_Flow"]
+    
+    - name: "Total_Population_Change"
+      expression: "(Natural_Growth_Flow + Net_Migration_Flow) * Population"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Total population change combining natural growth and migration"
+      dependencies: ["Natural_Growth_Flow", "Net_Migration_Flow"]
+    
+    - name: "Urban_Population_Total"
+      expression: "np.sum(Population[:, :, 0])"  # Sum over age and income for urban (index 0)
+      units: "people"
+      description: "Total urban population across all age and income groups"
+      dependencies: ["Population"]
+    
+    - name: "Rural_Population_Total"
+      expression: "np.sum(Population[:, :, 1])"  # Sum over age and income for rural (index 1)
+      units: "people"
+      description: "Total rural population across all age and income groups"
+      dependencies: ["Population"]
+    
+    - name: "Total_Population_Check"
+      expression: "Urban_Population_Total + Rural_Population_Total"
+      units: "people"
+      description: "Total population check = urban + rural totals"
+      dependencies: ["Urban_Population_Total", "Rural_Population_Total"]
+    
+    - name: "Young_Population_Total"
+      expression: "np.sum(Population[0, :, :])"  # Sum young (index 0) across income and region
+      units: "people"
+      description: "Total young population across all income levels and regions"
+      dependencies: ["Population"]
+    
+    - name: "Working_Age_Population"
+      expression: "np.sum(Population[1, :, :])"  # Sum adult (index 1) across income and region
+      units: "people"
+      description: "Total working-age population"
+      dependencies: ["Population"]
+    
+    - name: "Elderly_Population_Total"
+      expression: "np.sum(Population[2, :, :])"  # Sum elderly (index 2) across income and region
+      units: "people"
+      description: "Total elderly population"
+      dependencies: ["Population"]
+    
+    - name: "Dependency_Ratio"
+      expression: "(Young_Population_Total + Elderly_Population_Total) / Working_Age_Population"
+      units: "dimensionless"
+      description: "Dependency ratio = (young + elderly) / working age"
+      dependencies: ["Young_Population_Total", "Elderly_Population_Total", "Working_Age_Population"]
+
+# Connections
+connections:
+  # Population stock connections - calculators provide net effects
+  - from: "Total_Population_Change"
+    to: "Population"
+    type: "inflow"
+
+  # Individual flows for reference (not directly connected to avoid double-counting)
+  # The calculators combine these flows appropriately

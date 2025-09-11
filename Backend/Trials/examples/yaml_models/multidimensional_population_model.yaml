@@ -1,0 +1,256 @@
+# Multidimensional Population Model Structure
+# This file defines the model structure with dimensions, stocks, flows, and functions
+# Scenario-specific parameters are defined in separate files
+
+model:
+  name: "Multidimensional Climate-Adaptive Population Model"
+  description: "Advanced population dynamics with age, income, and regional stratification for climate adaptation analysis"
+  time_horizon: 50
+  dt: 0.25
+  time_units: "year"
+
+# Dimension specifications with explicit names, sizes, and coordinate labels
+dimensions:
+  age_group:
+    size: 3
+    labels: ["young_0_18", "adult_19_65", "elderly_65_plus"]
+    description: "Age cohorts for demographic analysis"
+    coordinates: [9, 42, 75]  # Representative ages
+  
+  income_level:
+    size: 3
+    labels: ["low_income", "medium_income", "high_income"]
+    description: "Economic stratification categories"
+    coordinates: [25000, 50000, 100000]  # Representative income levels (USD/year)
+  
+  region:
+    size: 2
+    labels: ["urban", "rural"]
+    description: "Geographic settlement types"
+    coordinates: [1, 0]  # Urban=1, Rural=0 for binary encoding
+
+# Custom function definitions for multidimensional calculations
+functions:
+  multidimensional_birth_calculator:
+    expression: "base_birth_rate * fertility_multiplier * (1 - climate_fertility_impact * climate_stress) * population"
+    dependencies: ["population", "climate_stress", "fertility_multiplier"]
+    output_dimensions: ["age_group", "income_level", "region"]
+    description: "Calculate births across all demographic dimensions"
+  
+  multidimensional_death_calculator:
+    expression: "base_mortality_rate * mortality_multiplier * (1 + climate_mortality_sensitivity * climate_stress) * population"
+    dependencies: ["population", "climate_stress", "mortality_multiplier"]
+    output_dimensions: ["age_group", "income_level", "region"]
+    description: "Calculate deaths with climate sensitivity across dimensions"
+  
+  climate_migration_calculator:
+    expression: "population * migration_rate * (climate_stress * migration_sensitivity + economic_push_factor)"
+    dependencies: ["population", "climate_stress", "economic_push_factor"]
+    output_dimensions: ["age_group", "income_level", "region"]
+    description: "Calculate climate-driven migration flows"
+  
+  economic_migration_calculator:
+    expression: "population * base_migration_rate * economic_attraction_differential * income_mobility_factor"
+    dependencies: ["population", "economic_attraction_differential", "income_mobility_factor"]
+    output_dimensions: ["age_group", "income_level", "region"]
+    description: "Calculate economic opportunity-driven migration"
+  
+  climate_stress_calculator:
+    expression: "base_climate_stress + warming_trend * time + climate_variability * np.sin(2 * np.pi * time / climate_cycle_period) + extreme_events_component"
+    dependencies: ["time", "warming_trend", "climate_variability", "extreme_events_component"]
+    output_dimensions: []
+    description: "Calculate time-varying climate stress index"
+  
+  economic_conditions_calculator:
+    expression: "base_gdp_per_capita * (1 - climate_economic_impact * climate_stress) * regional_economic_multiplier"
+    dependencies: ["climate_stress", "regional_economic_multiplier"]
+    output_dimensions: ["region"]
+    description: "Calculate regional economic conditions with climate impacts"
+
+# Model elements definition
+elements:
+  stocks:
+    - name: "Population"
+      initial_value: "$initial_population_distribution"
+      units: "people"
+      spatial_dims: ["age_group", "income_level", "region"]
+      min_value: 0
+      description: "Multidimensional population stock stratified by age, income, and region"
+  
+  flows:
+    - name: "Births"
+      rate: "multidimensional_birth_calculator"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Birth flow with demographic and climate sensitivity"
+      parameters:
+        base_birth_rate: "$base_birth_rate"
+        fertility_multiplier: "$fertility_multiplier"
+        climate_fertility_impact: "$climate_fertility_impact"
+    
+    - name: "Deaths"
+      rate: "multidimensional_death_calculator"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Death flow with age, income, and climate sensitivity"
+      parameters:
+        base_mortality_rate: "$base_mortality_rate"
+        mortality_multiplier: "$mortality_multiplier"
+        climate_mortality_sensitivity: "$climate_mortality_sensitivity"
+    
+    - name: "Climate_Migration_Out"
+      rate: "climate_migration_calculator"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Climate-driven emigration flow"
+      parameters:
+        migration_rate: "$climate_migration_rate"
+        migration_sensitivity: "$climate_migration_sensitivity"
+    
+    - name: "Economic_Migration_In"
+      rate: "economic_migration_calculator"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Economic opportunity-driven immigration flow"
+      parameters:
+        base_migration_rate: "$economic_migration_rate"
+    
+    - name: "Age_Transition"
+      rate: "age_transition_rate"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Aging transition between age groups"
+      parameters:
+        transition_rates: "$age_transition_rates"
+    
+    - name: "Income_Mobility"
+      rate: "income_mobility_rate"
+      units: "people/year"
+      spatial_dims: ["age_group", "income_level", "region"]
+      description: "Income level transitions"
+      parameters:
+        mobility_matrix: "$income_mobility_matrix"
+  
+  auxiliaries:
+    - name: "Climate_Stress"
+      calculation: "climate_stress_calculator"
+      units: "dimensionless"
+      description: "Time-varying climate stress index (0-1 scale)"
+      parameters:
+        base_climate_stress: "$base_climate_stress"
+        warming_trend: "$warming_trend"
+        climate_variability: "$climate_variability"
+        climate_cycle_period: "$climate_cycle_period"
+        extreme_events_component: "$extreme_events_component"
+    
+    - name: "Economic_Conditions"
+      calculation: "economic_conditions_calculator"
+      units: "USD/person/year"
+      spatial_dims: ["region"]
+      description: "Regional economic conditions with climate impacts"
+      parameters:
+        base_gdp_per_capita: "$base_gdp_per_capita"
+        climate_economic_impact: "$climate_economic_impact"
+        regional_economic_multiplier: "$regional_economic_multiplier"
+    
+    - name: "Carrying_Capacity_Pressure"
+      calculation: "carrying_capacity_pressure"
+      units: "dimensionless"
+      spatial_dims: ["region"]
+      description: "Regional carrying capacity pressure indicator"
+      parameters:
+        regional_carrying_capacity: "$regional_carrying_capacity"
+    
+    - name: "Population_Density"
+      calculation: "population_density_calculator"
+      units: "people/km2"
+      spatial_dims: ["region"]
+      description: "Population density by region"
+      parameters:
+        regional_area: "$regional_area"
+
+# Connections between model elements
+connections:
+  # Population stock connections
+  - from: "Births"
+    to: "Population"
+    type: "inflow"
+  
+  - from: "Economic_Migration_In"
+    to: "Population"
+    type: "inflow"
+  
+  - from: "Deaths"
+    to: "Population"
+    type: "outflow"
+  
+  - from: "Climate_Migration_Out"
+    to: "Population"
+    type: "outflow"
+  
+  # Age and income transitions (internal flows)
+  - from: "Age_Transition"
+    to: "Population"
+    type: "internal_flow"
+  
+  - from: "Income_Mobility"
+    to: "Population"
+    type: "internal_flow"
+  
+  # Auxiliary dependencies
+  - from: "Population"
+    to: "Carrying_Capacity_Pressure"
+    type: "dependency"
+  
+  - from: "Population"
+    to: "Population_Density"
+    type: "dependency"
+  
+  - from: "Climate_Stress"
+    to: "Economic_Conditions"
+    type: "dependency"
+  
+  # Flow dependencies on auxiliaries
+  - from: "Climate_Stress"
+    to: "Births"
+    type: "dependency"
+  
+  - from: "Climate_Stress"
+    to: "Deaths"
+    type: "dependency"
+  
+  - from: "Climate_Stress"
+    to: "Climate_Migration_Out"
+    type: "dependency"
+  
+  - from: "Economic_Conditions"
+    to: "Economic_Migration_In"
+    type: "dependency"
+  
+  - from: "Carrying_Capacity_Pressure"
+    to: "Births"
+    type: "dependency"
+
+# Validation rules for model consistency
+validation:
+  dimension_consistency:
+    - check: "population_shape_matches_dimensions"
+      message: "Population array shape must match defined dimensions"
+    
+    - check: "flow_dimensions_consistent"
+      message: "All flows must have consistent dimensional structure"
+  
+  parameter_bounds:
+    - parameter: "base_birth_rate"
+      min: 0
+      max: 0.1
+      message: "Birth rate must be between 0 and 0.1 per year"
+    
+    - parameter: "base_mortality_rate"
+      min: 0
+      max: 0.05
+      message: "Mortality rate must be between 0 and 0.05 per year"
+  
+  mass_balance:
+    - check: "population_conservation"
+      message: "Total population changes must equal net flows"

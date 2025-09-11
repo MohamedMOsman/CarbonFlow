@@ -245,14 +245,22 @@ export function ModelProvider({ children }) {
   }, [systems, components, activeSystemId, selectedId, selectedConnectionId, outputDirHandle, getSystemLineage, sanitizeName])
 
   const addComponent = useCallback((systemId, type = 'Stock') => {
+    const defaultSize = {
+      Stock: { w: 140, h: 56 },
+      Flow: { w: 160, h: 56 },
+      Calculator: { w: 90, h: 90 },
+      Parameter: { w: 140, h: 70 },
+      Dataset: { w: 160, h: 60 },
+      Reference: { w: 140, h: 56 },
+    }[type] || { w: 180, h: 60 }
     const comp = {
       id: genId(),
       name: `${type} ${components.length + 1}`,
       type,
       x: 200 + components.length * 10,
       y: 120 + components.length * 10,
-      w: 180,
-      h: 60,
+      w: defaultSize.w,
+      h: defaultSize.h,
       data: (['Stock','Flow','Parameter','Dataset'].includes(type)) ? { data: [['A','B','C'],['1','2','3']] } : (type === 'Calculator' ? { equation: '' } : {}),
       overrides: {},
       systemId

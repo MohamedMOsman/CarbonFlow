@@ -18,10 +18,19 @@ function ConnectorDot({ x, y, onStart, onEnd, side }) {
 }
 
 function Card({ comp, onMouseDown, selected, hasOverride }) {
+  const shapeClass = comp.type === 'Flow' ? 'shape-flow'
+    : comp.type === 'Calculator' ? 'shape-calculator'
+    : comp.type === 'Parameter' ? 'shape-parameter'
+    : 'shape-stock'
+  const colorClass = comp.type === 'Flow' ? 'border-green-400 bg-green-50'
+    : comp.type === 'Calculator' ? 'border-yellow-400 bg-yellow-50'
+    : comp.type === 'Parameter' ? 'border-purple-400 bg-purple-50'
+    : comp.type === 'Reference' ? 'border-gray-400 bg-gray-50'
+    : 'border-blue-400 bg-blue-50'
   return (
     <foreignObject x={comp.x} y={comp.y} width={comp.w} height={comp.h}>
       <div
-        className={`border rounded-md shadow-sm h-full w-full flex items-center justify-center select-none ${selected? 'ring-2 ring-blue-400': (hasOverride ? 'ring-2 ring-amber-400' : '')} ${comp.type==='Reference' ? 'border-dashed bg-gray-50' : 'bg-white'}`}
+        className={`border shadow-sm h-full w-full flex items-center justify-center select-none ${shapeClass} ${colorClass} ${selected? 'ring-2 ring-blue-400': (hasOverride ? 'ring-2 ring-amber-400' : '')} ${comp.type==='Reference' ? 'border-dashed' : ''}`}
         onMouseDown={onMouseDown}
         onClick={e => e.stopPropagation()}
       >

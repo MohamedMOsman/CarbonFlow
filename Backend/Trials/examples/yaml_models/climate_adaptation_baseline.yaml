@@ -1,0 +1,173 @@
+# Climate Adaptation Baseline Scenario Parameters
+# This file contains parameter values for the baseline (no adaptation) scenario
+# Used with climate_adaptation_model.yaml structure for comparison
+
+scenario:
+  name: "Climate Adaptation Baseline Scenario"
+  description: "Minimal adaptation measures representing current/business-as-usual conditions"
+  version: "1.0"
+  created_date: "2024-01-15"
+  model_file: "climate_adaptation_model.yaml"
+
+# Parameter overrides for baseline scenario (minimal adaptation)
+constants:
+  # Minimal structure basement height distribution [parcel, year_built_cohort, building_type]
+  # Values represent current standard construction practices across aggregated buildings within parcels
+  # Baseline conditions for business-as-usual scenario
+  initial_structure_basement_height:
+    # parcel_1001: Standard protection
+    - [
+        [1.8, 1.5],  # pre_war_cohort: [residential, commercial]
+        [2.2, 1.9],  # post_war_cohort
+        [2.6, 2.3]   # modern_cohort
+      ]
+    # parcel_1002: Standard protection
+    - [
+        [2.0, 1.7],  # pre_war_cohort
+        [2.4, 2.1],  # post_war_cohort
+        [2.8, 2.5]   # modern_cohort
+      ]
+    # parcel_1003: Standard protection
+    - [
+        [2.2, 1.9],  # pre_war_cohort
+        [2.6, 2.3],  # post_war_cohort
+        [3.0, 2.7]   # modern_cohort
+      ]
+
+  # Minimal structure offset from ground [parcel, year_built_cohort, building_type]
+  # Standard elevation practices without climate adaptation focus across aggregated buildings within parcels
+  # Baseline conditions for business-as-usual scenario
+  initial_structure_offset_from_ground:
+    # parcel_1001: Standard elevation
+    - [
+        [0.3, 0.2],  # pre_war_cohort: [residential, commercial]
+        [0.6, 0.5],  # post_war_cohort
+        [0.9, 0.8]   # modern_cohort
+      ]
+    # parcel_1002: Standard elevation
+    - [
+        [0.4, 0.3],  # pre_war_cohort
+        [0.7, 0.6],  # post_war_cohort
+        [1.0, 0.9]   # modern_cohort
+      ]
+    # parcel_1003: Standard elevation
+    - [
+        [0.5, 0.4],  # pre_war_cohort
+        [0.8, 0.7],  # post_war_cohort
+        [1.1, 1.0]   # modern_cohort
+      ]
+
+
+
+
+
+  # Baseline improvement rates (minimal/business-as-usual) - multidimensional [parcel, year_built_cohort, building_type]
+  # Lower basement height improvement rates for baseline scenario
+  basement_height_improvement_rate:
+    # parcel_1001: Minimal improvement rates
+    - [
+        [0.005, 0.004],  # pre_war_cohort: [residential, commercial] - very slow improvement
+        [0.008, 0.006],  # post_war_cohort - minimal improvement
+        [0.012, 0.010]   # modern_cohort - slightly better but still low
+      ]
+    # parcel_1002: Minimal improvement rates
+    - [
+        [0.006, 0.005],  # pre_war_cohort
+        [0.009, 0.007],  # post_war_cohort
+        [0.013, 0.011]   # modern_cohort
+      ]
+    # parcel_1003: Minimal improvement rates
+    - [
+        [0.007, 0.006],  # pre_war_cohort
+        [0.010, 0.008],  # post_war_cohort
+        [0.014, 0.012]   # modern_cohort
+      ]
+
+  # Baseline structure offset improvement rates (minimal/business-as-usual)
+  offset_improvement_rate:
+    # parcel_1001: Minimal improvement rates
+    - [
+        [0.003, 0.002],  # pre_war_cohort: [residential, commercial]
+        [0.005, 0.004],  # post_war_cohort
+        [0.008, 0.006]   # modern_cohort
+      ]
+    # parcel_1002: Minimal improvement rates
+    - [
+        [0.004, 0.003],  # pre_war_cohort
+        [0.006, 0.005],  # post_war_cohort
+        [0.009, 0.007]   # modern_cohort
+      ]
+    # parcel_1003: Minimal improvement rates
+    - [
+        [0.005, 0.004],  # pre_war_cohort
+        [0.007, 0.006],  # post_war_cohort
+        [0.010, 0.008]   # modern_cohort
+      ]
+  # Baseline scenario-specific parameters
+  flood_protection_investment_multiplier: 1.0    # Standard investment level
+  climate_urgency_factor: 1.0                    # No urgency multiplier
+  
+  # Standard regional adaptation priorities (equal weighting)
+  regional_adaptation_priorities:
+    urban_core: 0.33     # Equal priority weight
+    suburban: 0.33       # Equal priority weight  
+    rural: 0.34          # Equal priority weight
+
+  # Standard building type focus (equal weighting)
+  building_adaptation_focus:
+    residential: 0.5     # Equal focus on residential buildings
+    commercial: 0.5      # Equal focus on commercial buildings
+
+  # No time-sensitive adaptation bonuses/penalties
+  early_action_bonus: 1.0         # No bonus for early implementation
+  delayed_action_penalty: 1.0     # No penalty for delayed implementation
+  
+  # Equal climate scenario weighting
+  scenario_probability_weights:
+    rcp45: 0.5          # Equal probability weight for moderate scenario
+    rcp85: 0.5          # Equal probability weight for high emissions scenario
+
+  # No risk-based adaptation scaling
+  risk_adaptation_scaling:
+    low_risk: 1.0       # Standard adaptation for all risk levels
+    medium_risk: 1.0    # Standard adaptation for all risk levels
+    high_risk: 1.0      # Standard adaptation for all risk levels
+
+  # Basic economic parameters
+  cost_effectiveness_threshold: 0.5     # Lower cost-effectiveness requirement
+  benefit_cost_ratio_target: 1.5       # Lower benefit-cost ratio target
+  
+  # Standard implementation timeline parameters
+  implementation_ramp_up_years: 10      # Longer ramp-up period
+  maintenance_factor: 0.90              # Lower maintenance effectiveness
+  technology_improvement_rate: 0.01     # Slower technology improvement rate (1%)
+
+# Model configuration for baseline scenario
+model_config:
+  time_horizon: 100     # Same time horizon for comparison
+  dt: 0.25             # Same time steps
+  
+  # Standard output configuration
+  output_frequency: 1   # Annual output frequency
+  detailed_tracking: false
+  
+  # Basic validation settings
+  enable_validation: true
+  validation_frequency: 10  # Less frequent validation
+  
+  # No sensitivity analysis for baseline
+  enable_sensitivity_analysis: false
+
+# Baseline scenario analysis settings
+analysis:
+  focus_metrics:
+    - "Total_Flood_Protection"
+    - "Net_Temperature_Change"
+    - "Adaptation_Effectiveness"
+  
+  comparison_baseline: "self"  # This is the baseline
+  
+  reporting_intervals: [25, 50, 75, 100]  # Less frequent reporting
+  
+  uncertainty_analysis:
+    enabled: false  # Simplified baseline without uncertainty analysis

@@ -1,0 +1,86 @@
+# Baseline Scenario Parameters for Multidimensional Population Model
+# This file contains parameter values for the baseline scenario
+# Used with multidimensional_population_model.yaml structure
+
+scenario:
+  name: "Multidimensional Baseline Scenario"
+  description: "Baseline climate adaptation scenario with moderate conditions"
+  version: "2.0"
+  created_date: "2024-01-15"
+  model_file: "model_structure.yaml"
+
+# Parameter overrides for baseline scenario
+constants:
+  # Base population distribution [age_group, income_level, region]
+  base_population_distribution:
+    - [[1500, 1200, 800], [2000, 1800, 1000]]    # young: [low, med, high] x [urban, rural]
+    - [[2500, 2200, 1500], [1800, 1600, 1200]]   # adult: [low, med, high] x [urban, rural]
+    - [[800, 600, 400], [600, 500, 300]]         # elderly: [low, med, high] x [urban, rural]
+
+  # Basic demographic rates - baseline values
+  base_birth_rate: 0.025      # base births per person per year
+  base_mortality_rate: 0.015  # base deaths per person per year
+
+  # Demographic multipliers by dimension [age_group, region, income_level]
+  fertility_multiplier:
+    # Young (0-18): [urban, rural] x [low, med, high income]
+    - [[1.2, 1.0, 0.8], [1.3, 1.1, 0.9]]
+    # Adult (19-65): [urban, rural] x [low, med, high income]
+    - [[1.0, 0.9, 0.7], [1.1, 1.0, 0.8]]
+    # Elderly (65+): [urban, rural] x [low, med, high income]
+    - [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+
+  mortality_multiplier:
+    # Young (0-18): [urban, rural] x [low, med, high income]
+    - [[1.1, 0.9, 0.7], [1.2, 1.0, 0.8]]
+    # Adult (19-65): [urban, rural] x [low, med, high income]
+    - [[1.0, 0.8, 0.6], [1.1, 0.9, 0.7]]
+    # Elderly (65+): [urban, rural] x [low, med, high income]
+    - [[1.3, 1.0, 0.8], [1.4, 1.1, 0.9]]
+
+  # Climate impact parameters
+  climate_fertility_impact: 0.15      # fertility reduction per unit climate stress
+  climate_mortality_sensitivity: 0.25 # mortality increase per unit climate stress
+
+  # Migration parameters
+  climate_migration_rate: 0.002       # base climate migration rate
+  climate_migration_sensitivity: 0.8  # migration sensitivity to climate stress
+  economic_migration_rate: 0.003      # base economic migration rate
+  economic_push_factor: 0.1           # economic push factor
+
+  # Climate stress parameters
+  base_climate_stress: 0.1            # baseline climate stress (0-1 scale)
+  warming_trend: 0.002                # annual warming trend
+  climate_variability: 0.05           # climate variability amplitude
+  climate_cycle_period: 10            # climate cycle period in years
+  extreme_events_component: 0.02      # extreme events contribution
+
+  # Economic parameters
+  base_gdp_per_capita: 45000          # baseline GDP per capita (USD/year)
+  climate_economic_impact: 0.3        # economic impact per unit climate stress
+  regional_economic_multiplier: [1.2, 0.8]  # [urban, rural] economic multipliers
+
+  # Age transition rates (annual probability of moving to next age group)
+  age_transition_rates:
+    - [0.055, 0.055, 0.055]  # young to adult transition by income
+    - [0.025, 0.025, 0.025]  # adult to elderly transition by income
+    - [0.000, 0.000, 0.000]  # elderly (no further transition)
+
+  # Income mobility matrix (annual transition probabilities)
+  income_mobility_matrix:
+    - [0.85, 0.12, 0.03]  # from low income to [low, med, high]
+    - [0.08, 0.84, 0.08]  # from medium income to [low, med, high]
+    - [0.02, 0.13, 0.85]  # from high income to [low, med, high]
+
+  # Regional parameters
+  regional_carrying_capacity: [50000, 30000]  # [urban, rural] carrying capacity
+  regional_area: [100, 500]                   # [urban, rural] area in km²
+
+  # Additional dependency parameters
+  economic_attraction_differential: 0.15      # economic attraction differential
+  income_mobility_factor: 1.0                # income mobility factor
+
+# Model configuration overrides
+model_config:
+  time_horizon: 50
+  dt: 0.25

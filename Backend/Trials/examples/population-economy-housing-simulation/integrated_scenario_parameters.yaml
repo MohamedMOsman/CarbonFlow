@@ -1,0 +1,147 @@
+# Integrated Population-Economy-Housing Scenario Parameters
+# This file contains unified parameter values for the complete integrated simulation
+# Used with integrated_model_structure.yaml
+
+scenario:
+  name: "Integrated Population-Economy-Housing Baseline Scenario"
+  description: "Baseline scenario for complete integrated simulation with moderate conditions across all modules"
+  version: "1.0"
+  created_date: "2024-01-15"
+  model_file: "integrated_model_structure.yaml"
+
+# Unified parameter values for all modules
+constants:
+  # Population dynamics parameters
+  # Base population distribution [age_group, gender]
+  base_population_distribution:
+    - [12000, 11500]  # 0-14: [male, female]
+    - [15000, 14800]  # 15-29: [male, female]
+    - [18000, 17500]  # 30-44: [male, female]
+    - [14000, 13800]  # 45-59: [male, female]
+    - [8000, 9200]    # 60+: [male, female]
+
+  # Total population distribution [age_group, gender, year] - initial values
+  total_population_distribution:
+    - [12000, 11500]  # 0-14: [male, female]
+    - [15000, 14800]  # 15-29: [male, female]
+    - [18000, 17500]  # 30-44: [male, female]
+    - [14000, 13800]  # 45-59: [male, female]
+    - [8000, 9200]    # 60+: [male, female]
+
+  # Immigration parameters
+  base_immigration_rate: 0.003
+  immigration_multiplier:
+    - [[0.5, 0.8, 1.2], [0.5, 0.8, 1.2]]  # 0-14: [male, female] x [low, med, high]
+    - [[1.5, 1.8, 2.2], [1.4, 1.7, 2.0]]  # 15-29: [male, female] x [low, med, high]
+    - [[1.2, 1.5, 1.8], [1.1, 1.4, 1.7]]  # 30-44: [male, female] x [low, med, high]
+    - [[0.8, 1.0, 1.2], [0.7, 0.9, 1.1]]  # 45-59: [male, female] x [low, med, high]
+    - [[0.3, 0.4, 0.5], [0.3, 0.4, 0.5]]  # 60+: [male, female] x [low, med, high]
+
+  # Emigration parameters
+  base_emigration_rate: 0.001
+  emigration_multiplier:
+    - [[0.3, 0.4, 0.6], [0.3, 0.4, 0.6]]  # 0-14: [male, female] x [low, med, high]
+    - [[0.8, 1.0, 1.4], [0.7, 0.9, 1.2]]  # 15-29: [male, female] x [low, med, high]
+    - [[0.6, 0.8, 1.2], [0.5, 0.7, 1.0]]  # 30-44: [male, female] x [low, med, high]
+    - [[0.4, 0.5, 0.8], [0.4, 0.5, 0.7]]  # 45-59: [male, female] x [low, med, high]
+    - [[0.2, 0.3, 0.4], [0.2, 0.3, 0.4]]  # 60+: [male, female] x [low, med, high]
+
+  # Birth and death parameters
+  fertility_rate: 0.018
+  fertility_multiplier:
+    - [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]    # 0-14: [male, female] x [low, med, high]
+    - [[0.0, 0.0, 0.0], [1.8, 1.5, 1.2]]    # 15-29: [male, female] x [low, med, high]
+    - [[0.0, 0.0, 0.0], [1.2, 1.0, 0.8]]    # 30-44: [male, female] x [low, med, high]
+    - [[0.0, 0.0, 0.0], [0.3, 0.2, 0.1]]    # 45-59: [male, female] x [low, med, high]
+    - [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]    # 60+: [male, female] x [low, med, high]
+
+  mortality_rate: 0.008
+  mortality_multiplier:
+    - [[1.2, 0.8, 0.6], [1.0, 0.7, 0.5]]  # 0-14: [male, female] x [low, med, high]
+    - [[1.1, 0.9, 0.7], [0.8, 0.6, 0.4]]  # 15-29: [male, female] x [low, med, high]
+    - [[1.3, 1.0, 0.8], [1.0, 0.8, 0.6]]  # 30-44: [male, female] x [low, med, high]
+    - [[1.8, 1.4, 1.0], [1.5, 1.2, 0.9]]  # 45-59: [male, female] x [low, med, high]
+    - [[2.5, 2.0, 1.5], [2.2, 1.8, 1.3]]  # 60+: [male, female] x [low, med, high]
+
+  # Economic parameters
+  economic_growth_rate: 0.02
+
+  # Economic indicators parameters
+  # Employed population distribution [age_group, gender] - initial values
+  employed_population_distribution:
+    - [0, 0]        # 0-14: [male, female]
+    - [12000, 11500] # 15-29: [male, female]
+    - [16000, 15000] # 30-44: [male, female]
+    - [12000, 11000] # 45-59: [male, female]
+    - [2000, 1800]   # 60+: [male, female]
+
+  # Average income distribution [age_group, income_bracket] - initial values
+  average_income_distribution:
+    - [0, 0, 0]           # 0-14: [low, med, high]
+    - [28000, 45000, 75000] # 15-29: [low, med, high]
+    - [35000, 60000, 95000] # 30-44: [low, med, high]
+    - [40000, 65000, 105000] # 45-59: [low, med, high]
+    - [25000, 40000, 70000]  # 60+: [low, med, high]
+
+  # Employment and income parameters
+  employment_rate: 0.85
+  labor_participation_rate:
+    - [0.0, 0.0]    # 0-14: [male, female]
+    - [0.85, 0.80]  # 15-29: [male, female]
+    - [0.92, 0.85]  # 30-44: [male, female]
+    - [0.88, 0.82]  # 45-59: [male, female]
+    - [0.35, 0.25]  # 60+: [male, female]
+
+  income_growth_rate: 0.025
+  base_income:
+    - [0, 0, 0]           # 0-14: [low, med, high]
+    - [25000, 42000, 70000] # 15-29: [low, med, high]
+    - [32000, 55000, 90000] # 30-44: [low, med, high]
+    - [38000, 62000, 100000] # 45-59: [low, med, high]
+    - [22000, 38000, 65000]  # 60+: [low, med, high]
+
+  base_participation_rate:
+    - [0.0, 0.0]    # 0-14: [male, female]
+    - [0.82, 0.78]  # 15-29: [male, female]
+    - [0.90, 0.83]  # 30-44: [male, female]
+    - [0.85, 0.80]  # 45-59: [male, female]
+    - [0.32, 0.23]  # 60+: [male, female]
+
+  participation_trend:
+    - [0.0, 0.0]      # 0-14: [male, female]
+    - [0.002, 0.005]  # 15-29: [male, female]
+    - [0.001, 0.003]  # 30-44: [male, female]
+    - [0.000, 0.002]  # 45-59: [male, female]
+    - [0.001, 0.001]  # 60+: [male, female]
+
+  # Housing market parameters
+  # Housing inventory and supply distribution [housing_type, price_bracket]
+  housing_inventory_distribution:
+    - [15000, 25000]  # single_family: [affordable, market_rate]
+    - [8000, 18000]   # apartment: [affordable, market_rate]
+
+  housing_supply_distribution:
+    - [15000, 25000]  # single_family: [affordable, market_rate]
+    - [8000, 18000]   # apartment: [affordable, market_rate]
+
+  # Average housing price distribution [housing_type, price_bracket, year]
+  average_housing_price_distribution:
+    - [180000, 350000]  # single_family: [affordable, market_rate]
+    - [120000, 220000]  # apartment: [affordable, market_rate]
+
+  # Housing market parameters
+  construction_rate: 0.05
+  price_elasticity: 0.8
+  demand_per_person: 0.4
+  income_demand_multiplier:
+    - [0.6, 1.2]  # single_family: [affordable, market_rate]
+    - [1.4, 0.8]  # apartment: [affordable, market_rate]
+
+  demand_pressure_sensitivity: 0.5
+  base_economic_factor: 1.0
+  economic_growth_impact: 0.015
+
+# Model configuration overrides
+model_config:
+  time_horizon: 50
+  dt: 0.25

@@ -1,0 +1,236 @@
+# Climate Adaptation Model Structure
+# This file defines the model structure for flood construction measures
+# Scenario files contain parameter values that override the defaults
+
+model:
+  name: "Climate Adaptation Measures Model"
+  description: "System dynamics model for flood construction measures in climate adaptation"
+  time_horizon: 100
+  dt: 1
+  time_units: "year"
+
+# Default constants (can be overridden by scenario files)
+constants:
+  # Default structure basement height distribution [parcel, year_built_cohort, building_type]
+  # Values represent aggregated average basement heights across multiple buildings within each parcel
+  # Baseline conditions only - time evolution handled by system dynamics flows
+  initial_structure_basement_height:
+    # parcel_1001: Contains ~8-12 buildings per parcel
+    - [
+        [2.1, 1.8],  # pre_war_cohort (pre-1945): [residential, commercial]
+        [2.6, 2.3],  # post_war_cohort (1945-1980)
+        [3.1, 2.8]   # modern_cohort (post-1980)
+      ]
+    # parcel_1002: Contains ~6-10 buildings per parcel
+    - [
+        [2.3, 2.0],  # pre_war_cohort
+        [2.8, 2.5],  # post_war_cohort
+        [3.3, 3.0]   # modern_cohort
+      ]
+    # parcel_1003: Contains ~4-8 buildings per parcel
+    - [
+        [2.5, 2.2],  # pre_war_cohort
+        [3.0, 2.7],  # post_war_cohort
+        [3.5, 3.2]   # modern_cohort
+      ]
+
+  # Default structure offset from ground [parcel, year_built_cohort, building_type]
+  # Values represent aggregated average elevation offsets across multiple buildings within each parcel
+  # Baseline conditions only - time evolution handled by system dynamics flows
+  initial_structure_offset_from_ground:
+    # parcel_1001: Lower elevation requirements
+    - [
+        [0.4, 0.3],  # pre_war_cohort: [residential, commercial]
+        [0.8, 0.7],  # post_war_cohort
+        [1.2, 1.1]   # modern_cohort
+      ]
+    # parcel_1002: Moderate elevation requirements
+    - [
+        [0.6, 0.5],  # pre_war_cohort
+        [1.0, 0.9],  # post_war_cohort
+        [1.4, 1.3]   # modern_cohort
+      ]
+    # parcel_1003: Higher elevation requirements
+    - [
+        [0.8, 0.7],  # pre_war_cohort
+        [1.2, 1.1],  # post_war_cohort
+        [1.6, 1.5]   # modern_cohort
+      ]
+
+
+
+  # Default rates and parameters - multidimensional [parcel, year_built_cohort, building_type]
+  # Basement height improvement rates vary by parcel, cohort, and building type
+  basement_height_improvement_rate:
+    # parcel_1001: Lower improvement rates due to older infrastructure
+    - [
+        [0.015, 0.012],  # pre_war_cohort: [residential, commercial] - slower improvement
+        [0.020, 0.018],  # post_war_cohort - moderate improvement
+        [0.025, 0.022]   # modern_cohort - faster improvement due to better access
+      ]
+    # parcel_1002: Moderate improvement rates
+    - [
+        [0.018, 0.015],  # pre_war_cohort
+        [0.022, 0.020],  # post_war_cohort
+        [0.028, 0.025]   # modern_cohort
+      ]
+    # parcel_1003: Higher improvement rates due to better resources
+    - [
+        [0.020, 0.018],  # pre_war_cohort
+        [0.025, 0.022],  # post_war_cohort
+        [0.030, 0.028]   # modern_cohort
+      ]
+
+  # Structure offset improvement rates vary by parcel, cohort, and building type
+  offset_improvement_rate:
+    # parcel_1001: Lower improvement rates
+    - [
+        [0.010, 0.008],  # pre_war_cohort: [residential, commercial]
+        [0.015, 0.012],  # post_war_cohort
+        [0.020, 0.018]   # modern_cohort
+      ]
+    # parcel_1002: Moderate improvement rates
+    - [
+        [0.012, 0.010],  # pre_war_cohort
+        [0.017, 0.015],  # post_war_cohort
+        [0.022, 0.020]   # modern_cohort
+      ]
+    # parcel_1003: Higher improvement rates
+    - [
+        [0.015, 0.012],  # pre_war_cohort
+        [0.020, 0.018],  # post_war_cohort
+        [0.025, 0.022]   # modern_cohort
+      ]
+
+  flood_height: [0.015, 0.018, 0.020]
+
+# Dimensions definition
+dimensions:
+  parcel:
+    size: 3
+    labels: ["parcel_1001", "parcel_1002", "parcel_1003"]
+    description: "Aggregated property parcels with multiple buildings, identified by parcel numbers"
+    coordinates: [1001, 1002, 1003]  # Parcel identification numbers
+
+  year_built_cohort:
+    size: 3
+    labels: ["pre_war", "post_war", "modern"]
+    description: "Building construction era cohorts representing different building standards and practices"
+    coordinates: [1935, 1962, 1995]  # Representative years for each cohort
+
+  building_type:
+    size: 2
+    labels: ["residential", "commercial"]
+    description: "Building type categories within parcels"
+    coordinates: [1, 2]  # Categorical encoding
+
+
+  
+
+  
+
+
+# Model elements
+elements:
+  stocks:
+    - name: "Structure_Basement_Height"
+      initial_value:
+        array:
+          shape: [3, 3, 2]
+          values: "$initial_structure_basement_height"
+      units: "meters"
+      spatial_dims: ["parcel", "year_built_cohort", "building_type"]
+      min_value: 0
+      description: "Aggregated average basement height across multiple buildings within parcels, by construction cohort and building type"
+
+    - name: "Structure_Offset_From_Ground"
+      initial_value:
+        array:
+          shape: [3, 3, 2]
+          values: "$initial_structure_offset_from_ground"
+      units: "meters"
+      spatial_dims: ["parcel", "year_built_cohort", "building_type"]
+      min_value: 0
+      description: "Aggregated average elevation offset from ground across multiple buildings within parcels, by construction cohort and building type"
+
+
+
+  flows:
+    - name: "Basement_Height_Improvement"
+      rate: "$basement_height_improvement_rate"
+      units: "meters/year"
+      spatial_dims: ["parcel", "year_built_cohort", "building_type"]
+      description: "Rate of basement height improvements across aggregated buildings within parcels"
+
+    - name: "Offset_Improvement"
+      rate: "$offset_improvement_rate"
+      units: "meters/year"
+      spatial_dims: ["parcel", "year_built_cohort", "building_type"]
+      description: "Rate of structure elevation offset improvements across aggregated buildings within parcels"
+
+    - name: "Flood_hieght"
+      rate: "$flood_height"
+      units: "meters/year"
+      spatial_dims: ["parcel"]
+      description: "Rate of flood height increase due to climate change"
+
+
+
+  calculators:
+    - name: "Total_Flood_Protection"
+      expression: "Structure_Basement_Height + Structure_Offset_From_Ground"
+      units: "meters"
+      spatial_dims: ["parcel", "year_built_cohort", "building_type"]
+      description: "Total aggregated flood protection = basement height + offset from ground across buildings within parcels"
+      dependencies: ["Structure_Basement_Height", "Structure_Offset_From_Ground"]
+
+    - name: "Flood_Protection_Improvement"
+      expression: "Basement_Height_Improvement + Offset_Improvement"
+      units: "meters/year"
+      spatial_dims: ["parcel", "year_built_cohort", "building_type"]
+      description: "Combined flood protection improvement rate across aggregated buildings within parcels"
+      dependencies: ["Basement_Height_Improvement", "Offset_Improvement"]
+
+    - name: "Adaptation_Effectiveness"
+      expression: "np.mean(Total_Flood_Protection)"
+      units: "dimensionless"
+      description: "Flood protection adaptation effectiveness index"
+      dependencies: ["Total_Flood_Protection"]
+
+# Connections between model elements
+connections:
+  # Flood protection stock connections
+  - from: "Basement_Height_Improvement"
+    to: "Structure_Basement_Height"
+    type: "inflow"
+
+  - from: "Offset_Improvement"
+    to: "Structure_Offset_From_Ground"
+    type: "inflow"
+
+
+
+# Validation rules for model consistency
+validation:
+  dimension_consistency:
+    - check: "flood_protection_shape_matches_dimensions"
+      message: "Flood protection arrays must match defined dimensions"
+    
+
+  
+  parameter_bounds:
+    - parameter: "basement_height_improvement_rate"
+      min: 0
+      max: 0.1
+      message: "Basement height improvement rates must be between 0 and 0.1 m/year for all dimensions"
+      multidimensional: true
+      shape: [3, 3, 2]  # [parcel, year_built_cohort, building_type]
+
+    - parameter: "offset_improvement_rate"
+      min: 0
+      max: 0.1
+      message: "Offset improvement rates must be between 0 and 0.1 m/year for all dimensions"
+      multidimensional: true
+      shape: [3, 3, 2]  # [parcel, year_built_cohort, building_type]
+    
+
