@@ -454,9 +454,12 @@ export function ModelProvider({ children }) {
   const STORAGE_KEY = 'sdm-react-model-v2'
 
   const exportModel = useCallback(() => {
+    let uiLayout = null
+    try { uiLayout = JSON.parse(localStorage.getItem('sdm-react-ui-v1')) || null } catch {}
     const payload = {
       systems, components, connections, scenarios, activeScenarioId, activeSystemId,
-      idCounter
+      idCounter,
+      ui: uiLayout ? { layout: uiLayout } : undefined
     }
     return JSON.stringify(payload)
   }, [systems, components, connections, scenarios, activeScenarioId, activeSystemId])
@@ -476,6 +479,13 @@ export function ModelProvider({ children }) {
       idCounter = Number.isInteger(data.idCounter) ? data.idCounter : Math.max(1,
         ...[...((data.components||[]).map(c=>c.id)), ...((data.systems||[]).map(s=>s.id)), ...((data.connections||[]).map(c=>c.id)), ...((data.scenarios||[]).map(s=>s.id))].filter(Boolean)
       ) + 1
+      // restore UI layout if provided
+      try {
+        if (data.ui && data.ui.layout && data.ui.layout.panels) {
+          localStorage.setItem('sdm-react-ui-v1', JSON.stringify(data.ui.layout))
+          window.dispatchEvent(new Event('ui-layout-updated'))
+        }
+      } catch {}
       return true
     } catch (e) {
       console.error('Failed to import model', e)
